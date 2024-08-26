@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -12,11 +14,11 @@ import static org.mockito.Mockito.*;
 /**
  * 자바는 스트림(Stream)으로부터 I/O를 사용한다.
  * 입출력(I/O)은 하나의 시스템에서 다른 시스템으로 데이터를 이동 시킬 때 사용한다.
- *
+ * <p>
  * InputStream은 데이터를 읽고, OutputStream은 데이터를 쓴다.
  * FilterStream은 InputStream이나 OutputStream에 연결될 수 있다.
  * FilterStream은 읽거나 쓰는 데이터를 수정할 때 사용한다. (e.g. 암호화, 압축, 포맷 변환)
- *
+ * <p>
  * Stream은 데이터를 바이트로 읽고 쓴다.
  * 바이트가 아닌 텍스트(문자)를 읽고 쓰려면 Reader와 Writer 클래스를 연결한다.
  * Reader, Writer는 다양한 문자 인코딩(e.g. UTF-8)을 처리할 수 있다.
@@ -26,7 +28,7 @@ class IOStreamTest {
 
     /**
      * OutputStream 학습하기
-     *
+     * <p>
      * 자바의 기본 출력 클래스는 java.io.OutputStream이다.
      * OutputStream의 write(int b) 메서드는 기반 메서드이다.
      * <code>public abstract void write(int b) throws IOException;</code>
@@ -39,13 +41,14 @@ class IOStreamTest {
          * OutputStream의 서브 클래스(subclass)는 특정 매체에 데이터를 쓰기 위해 write(int b) 메서드를 사용한다.
          * 예를 들어, FilterOutputStream은 파일로 데이터를 쓸 때,
          * 또는 DataOutputStream은 자바의 primitive type data를 다른 매체로 데이터를 쓸 때 사용한다.
-         * 
+         * <p>
          * write 메서드는 데이터를 바이트로 출력하기 때문에 비효율적이다.
          * <code>write(byte[] data)</code>와 <code>write(byte b[], int off, int len)</code> 메서드는
          * 1바이트 이상을 한 번에 전송 할 수 있어 훨씬 효율적이다.
          */
         @Test
         void OutputStream은_데이터를_바이트로_처리한다() throws IOException {
+            // 아스키 코드값으로 'n', 'e', 'x', 't', 's', 't', 'e', 'p' 이 byte 배열로 저장됨
             final byte[] bytes = {110, 101, 120, 116, 115, 116, 101, 112};
             final OutputStream outputStream = new ByteArrayOutputStream(bytes.length);
 
@@ -53,7 +56,7 @@ class IOStreamTest {
              * todo
              * OutputStream 객체의 write 메서드를 사용해서 테스트를 통과시킨다
              */
-
+            outputStream.write(bytes);
             final String actual = outputStream.toString();
 
             assertThat(actual).isEqualTo("nextstep");
@@ -63,7 +66,7 @@ class IOStreamTest {
         /**
          * 효율적인 전송을 위해 스트림에서 버퍼링을 사용 할 수 있다.
          * BufferedOutputStream 필터를 연결하면 버퍼링이 가능하다.
-         * 
+         * <p>
          * 버퍼링을 사용하면 OutputStream을 사용할 때 flush를 사용하자.
          * flush() 메서드는 버퍼가 아직 가득 차지 않은 상황에서 강제로 버퍼의 내용을 전송한다.
          * Stream은 동기(synchronous)로 동작하기 때문에 버퍼가 찰 때까지 기다리면
@@ -78,6 +81,19 @@ class IOStreamTest {
              * flush를 사용해서 테스트를 통과시킨다.
              * ByteArrayOutputStream과 어떤 차이가 있을까?
              */
+
+            /**
+             BufferedOutputStream : 데이터를 "버퍼"에 저장후, 버퍼가 가득 차거나 "flush()" 메서드가
+             호출될 때 버퍼에 저장된 데이터를 출력 스트림으로 내보냄
+
+             ByteArrayOutputStream : 데이터를 "메모리 내의" 바이트 배열에 저장하는 스트림, 데이터를 외부에
+             내보내지 않고 메모리에서만 관리 하므로, "flush()" 메소드가 필요 없습니다.
+             가령 toByteArray() 같은 메서드로 모든 데이터를 한 번에 얻을 수 있습니다.
+             */
+
+            // 데이터를 쓰고, 버퍼의 데이터를 강제로 출력 스트림으로 내보냄
+            outputStream.write(1);
+            outputStream.flush();
 
             verify(outputStream, atLeastOnce()).flush();
             outputStream.close();
@@ -97,18 +113,23 @@ class IOStreamTest {
              * java 9 이상에서는 변수를 try-with-resources로 처리할 수 있다.
              */
 
+            // try-with-resources를 사용하면 자동으로 자원 해제
+            try (OutputStream os = outputStream) {
+                os.write(1);
+            }
+
             verify(outputStream, atLeastOnce()).close();
         }
     }
 
     /**
      * InputStream 학습하기
-     *
+     * <p>
      * 자바의 기본 입력 클래스는 java.io.InputStream이다.
      * InputStream은 다른 매체로부터 바이트로 데이터를 읽을 때 사용한다.
      * InputStream의 read() 메서드는 기반 메서드이다.
      * <code>public abstract int read() throws IOException;</code>
-     * 
+     * <p>
      * InputStream의 서브 클래스(subclass)는 특정 매체에 데이터를 읽기 위해 read() 메서드를 사용한다.
      */
     @Nested
@@ -128,7 +149,10 @@ class IOStreamTest {
              * todo
              * inputStream에서 바이트로 반환한 값을 문자열로 어떻게 바꿀까?
              */
-            final String actual = "";
+            // InputStream을 UTF-8로 읽어서 문자열로 변환한다
+            final String actual = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))
+                    .lines()
+                    .collect(Collectors.joining("\n"));
 
             assertThat(actual).isEqualTo("🤩");
             assertThat(inputStream.read()).isEqualTo(-1);
@@ -148,6 +172,9 @@ class IOStreamTest {
              * try-with-resources를 사용한다.
              * java 9 이상에서는 변수를 try-with-resources로 처리할 수 있다.
              */
+            try (InputStream is = inputStream) {
+                is.read(new byte[]{1, 2, 3});
+            }
 
             verify(inputStream, atLeastOnce()).close();
         }
@@ -155,7 +182,7 @@ class IOStreamTest {
 
     /**
      * FilterStream 학습하기
-     *
+     * <p>
      * 필터는 필터 스트림, reader, writer로 나뉜다.
      * 필터는 바이트를 다른 데이터 형식으로 변환 할 때 사용한다.
      * reader, writer는 UTF-8, ISO 8859-1 같은 형식으로 인코딩된 텍스트를 처리하는 데 사용된다.
@@ -169,12 +196,14 @@ class IOStreamTest {
          * 버퍼 크기를 지정하지 않으면 버퍼의 기본 사이즈는 얼마일까?
          */
         @Test
-        void 필터인_BufferedInputStream를_사용해보자() {
+        void 필터인_BufferedInputStream를_사용해보자() throws IOException {
             final String text = "필터에 연결해보자.";
             final InputStream inputStream = new ByteArrayInputStream(text.getBytes());
-            final InputStream bufferedInputStream = null;
 
-            final byte[] actual = new byte[0];
+            // BufferedInputStream의 기본 버퍼 사이즈는 8192바이트 입니다.
+            final InputStream bufferedInputStream = new BufferedInputStream(inputStream);
+
+            final byte[] actual = bufferedInputStream.readAllBytes();
 
             assertThat(bufferedInputStream).isInstanceOf(FilterInputStream.class);
             assertThat(actual).isEqualTo("필터에 연결해보자.".getBytes());
@@ -197,15 +226,25 @@ class IOStreamTest {
          * 필터인 BufferedReader를 사용하면 readLine 메서드를 사용해서 문자열(String)을 한 줄 씩 읽어올 수 있다.
          */
         @Test
-        void BufferedReader를_사용하여_문자열을_읽어온다() {
+        void BufferedReader를_사용하여_문자열을_읽어온다() throws IOException {
             final String emoji = String.join("\r\n",
                     "😀😃😄😁😆😅😂🤣🥲☺️😊",
                     "😇🙂🙃😉😌😍🥰😘😗😙😚",
                     "😋😛😝😜🤪🤨🧐🤓😎🥸🤩",
                     "");
             final InputStream inputStream = new ByteArrayInputStream(emoji.getBytes());
+            final InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            final BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
 
             final StringBuilder actual = new StringBuilder();
+
+            String read = bufferedReader.readLine();
+
+            while(read != null){
+                actual.append(read).append("\r\n");
+                // read 변수를 갱신해서 새로운 줄을 읽음
+                read = bufferedReader.readLine();
+            }
 
             assertThat(actual).hasToString(emoji);
         }
