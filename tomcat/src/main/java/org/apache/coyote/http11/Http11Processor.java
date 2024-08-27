@@ -13,12 +13,15 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Http11Processor implements Runnable, Processor {
 
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
     private static final String HTML_CONTENT_TYPE = "text/html";
     private static final String CSS_CONTENT_TYPE = "text/css";
+    private static final int INDEX_URI = 1;
     private final Socket connection;
 
     public Http11Processor(final Socket connection) {
@@ -39,7 +42,7 @@ public class Http11Processor implements Runnable, Processor {
 
             // HTTP 요청의 첫번째 라인
             final String[] request = bufferedReader.readLine().split(" ");
-            final String requestTarget = request[1];
+            final String requestTarget = request[INDEX_URI];
             final String response = httpRequestHandler(requestTarget);
 
             outputStream.write(response.getBytes());
@@ -59,7 +62,7 @@ public class Http11Processor implements Runnable, Processor {
         }
 
         // 루트 경로가 아닐경우
-        URL resource = getClass()
+        final URL resource = getClass()
                 .getClassLoader()
                 .getResource("static" + requestTarget);
 
@@ -88,5 +91,35 @@ public class Http11Processor implements Runnable, Processor {
             return CSS_CONTENT_TYPE;
         }
         return HTML_CONTENT_TYPE;
+    }
+
+     static Map<String, String> parseQueryString(final String requestTarget) {
+        // /search?q=java&sort=ascending
+        // q가 key, java가 value
+        final Map<String, String> queryParams = new HashMap<>();
+        final int questionMarkIndex = requestTarget.indexOf("?");
+
+        if (questionMarkIndex == -1) {
+            return queryParams;
+        }
+
+        final String subQueryString = requestTarget.substring(questionMarkIndex + 1);
+
+        // q=java sort=ascending
+        final String[] split = subQueryString.split("&");
+
+        for (String s : split) {
+            // q java
+            // sort ascending
+            final String[] split1 = s.split("=");
+
+            if (split1.length == 2) {
+                queryParams.put(split1[0], split1[1]);
+            } else if (split1.length == 1) {
+                // 값이 없는 경우에는 빈 문자열을 값으로 설정합니다.
+                queryParams.put(split1[0], "");
+            }
+        }
+        return queryParams;
     }
 }
