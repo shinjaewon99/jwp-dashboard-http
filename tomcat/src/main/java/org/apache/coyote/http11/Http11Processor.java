@@ -4,6 +4,7 @@ import nextstep.jwp.db.InMemoryUserRepository;
 import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
+import org.apache.coyote.http11.request.HttpRequestStartLine;
 import org.apache.coyote.http11.response.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +22,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import static org.apache.coyote.http11.request.HttpRequestStartLine.parseHttpRequestStartLine;
+
 public class Http11Processor implements Runnable, Processor {
 
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
-    private static final String HTML_CONTENT_TYPE = "text/html";
-    private static final String CSS_CONTENT_TYPE = "text/css";
     private static final int INDEX_URI = 1;
     private static final String QUERY_STRING_ACCOUNT = "account";
     private static final String QUERY_STRING_PASSWORD = "password";
@@ -48,9 +49,8 @@ public class Http11Processor implements Runnable, Processor {
             final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             // HTTP 요청의 첫번째 라인
-            final String[] request = bufferedReader.readLine().split(" ");
-            final String requestTarget = request[INDEX_URI];
-            final String response = httpRequestHandler(requestTarget);
+            final HttpRequestStartLine requestStartLine = parseHttpRequestStartLine(bufferedReader.readLine());
+            final String response = httpRequestHandler(requestStartLine.getRequestTarget());
 
             outputStream.write(response.getBytes());
             outputStream.flush();
@@ -65,7 +65,7 @@ public class Http11Processor implements Runnable, Processor {
         if (requestTarget.equals("/")) {
             final var responseBody = "Hello world!";
 
-            return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
+            return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
         }
 
         // /login 경로 일때
@@ -82,12 +82,12 @@ public class Http11Processor implements Runnable, Processor {
             }
 
             final String responseBody = createUrlResource(requestTarget);
-            return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
+            return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
         }
 
         final String responseBody = createUrlResource(requestTarget);
 
-        return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
+        return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
     }
 
     private User findAccount(Map<String, String> parseQueryString) {
@@ -140,4 +140,3 @@ public class Http11Processor implements Runnable, Processor {
         return queryParams;
     }
 }
-
