@@ -11,9 +11,9 @@ public class HttpResponse {
     }
 
 
-    public static HttpResponse of(final String requestTarget, final String responseBody) {
+    public static HttpResponse of(final String statusCode, final String requestTarget, final String responseBody) {
         return new HttpResponse(String.join("\r\n",
-                "HTTP/1.1 200 OK ",
+                "HTTP/1.1 " + statusCode + " ",
                 "Content-Type: " + loadContentType(requestTarget) + ";charset=utf-8 ",
                 "Content-Length: " + responseBody.getBytes().length + " ",
                 "",
