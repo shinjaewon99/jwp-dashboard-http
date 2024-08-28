@@ -4,6 +4,7 @@ import nextstep.jwp.db.InMemoryUserRepository;
 import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
+import org.apache.coyote.http11.response.HttpResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +65,7 @@ public class Http11Processor implements Runnable, Processor {
         if (requestTarget.equals("/")) {
             final var responseBody = "Hello world!";
 
-            return createHttpResponse(requestTarget, responseBody);
+            return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
         }
 
         // /login 경로 일때
@@ -81,12 +82,12 @@ public class Http11Processor implements Runnable, Processor {
             }
 
             final String responseBody = createUrlResource(requestTarget);
-            return createHttpResponse(requestTarget, responseBody);
+            return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
         }
 
         final String responseBody = createUrlResource(requestTarget);
 
-        return createHttpResponse(requestTarget, responseBody);
+        return HttpResponse.of(requestTarget, responseBody).getHttpResponse();
     }
 
     private User findAccount(Map<String, String> parseQueryString) {
@@ -107,22 +108,6 @@ public class Http11Processor implements Runnable, Processor {
 
         final String filePath = resource.getFile();
         return new String(Files.readAllBytes(Paths.get(filePath)));
-    }
-
-    private String createHttpResponse(final String requestTarget, final String responseBody) {
-        return String.join("\r\n",
-                "HTTP/1.1 200 OK ",
-                "Content-Type: " + loadContentType(requestTarget) + ";charset=utf-8 ",
-                "Content-Length: " + responseBody.getBytes().length + " ",
-                "",
-                responseBody);
-    }
-
-    private String loadContentType(final String requestTarget) {
-        if (requestTarget.endsWith(".css")) {
-            return CSS_CONTENT_TYPE;
-        }
-        return HTML_CONTENT_TYPE;
     }
 
     private Map<String, String> parseQueryString(final String requestTarget) {
