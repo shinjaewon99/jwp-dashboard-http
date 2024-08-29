@@ -1,0 +1,34 @@
+package org.apache.coyote.http11.request;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class HttpRequestHeader {
+
+    private Map<String, String> headers = new HashMap<>();
+
+    public HttpRequestHeader(Map<String, String> headers) {
+        this.headers = new HashMap<>(headers);
+    }
+
+    public static HttpRequestHeader from(final BufferedReader bufferedReader) throws IOException {
+        Map<String, String> headerMap = new HashMap<>();
+        String requestTarget = bufferedReader.readLine();
+        while (!(requestTarget.isEmpty())) {
+            String[] lines = requestTarget.split("\r\n");
+            for (String line : lines) {
+                String[] split = line.split(": ");
+                headerMap.put(split[0], split[1]);
+            }
+            requestTarget = bufferedReader.readLine();
+        }
+
+        return new HttpRequestHeader(headerMap);
+    }
+
+    public String findHeaderValue(final String headerKey) {
+        return headers.get(headerKey);
+    }
+}
