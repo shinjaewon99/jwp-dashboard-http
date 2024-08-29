@@ -13,22 +13,24 @@ public class HttpRequestHeader {
         this.headers = new HashMap<>(headers);
     }
 
-    public static HttpRequestHeader from(final BufferedReader bufferedReader) throws IOException {
+    public static HttpRequestHeader from (final String requestTarget) throws IOException {
         Map<String, String> headerMap = new HashMap<>();
-        String requestTarget = bufferedReader.readLine();
+
         while (!(requestTarget.isEmpty())) {
             String[] lines = requestTarget.split("\r\n");
             for (String line : lines) {
                 String[] split = line.split(": ");
                 headerMap.put(split[0], split[1]);
             }
-            requestTarget = bufferedReader.readLine();
         }
-
         return new HttpRequestHeader(headerMap);
     }
 
     public String findHeaderValue(final String headerKey) {
         return headers.get(headerKey);
+    }
+
+    public String findContentLength(final String headerKey) {
+        return headers.get("Content-Length");
     }
 }
