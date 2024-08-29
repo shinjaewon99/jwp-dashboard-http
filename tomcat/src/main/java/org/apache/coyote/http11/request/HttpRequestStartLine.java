@@ -19,7 +19,7 @@ public class HttpRequestStartLine {
         this.httpVersion = httpVersion;
     }
 
-    public static HttpRequestStartLine parseHttpRequestStartLine(final String httpRequest) throws IOException {
+    public static HttpRequestStartLine from(final String httpRequest) throws IOException {
         String[] requestStartLine = httpRequest.split(BLANK);
         validateHttpRequestStartLineSize(requestStartLine);
 
