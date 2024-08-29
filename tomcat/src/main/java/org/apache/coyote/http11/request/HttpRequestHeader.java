@@ -30,7 +30,7 @@ public class HttpRequestHeader {
         return headers.get(headerKey);
     }
 
-    public String findContentLength(final String headerKey) {
+    public String findContentLength() {
         return headers.get("Content-Length");
     }
 }

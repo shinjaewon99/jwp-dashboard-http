@@ -20,7 +20,7 @@ public class HttpRequest {
     public static HttpRequest from(final BufferedReader bufferedReader) throws IOException {
         HttpRequestStartLine requestStartLine = parseHttpRequestStartLine(bufferedReader);
         HttpRequestHeader requestHeader = parseHttpRequestHeader(bufferedReader);
-        HttpRequestBody requestBody = parseHttpRequestBody(bufferedReader);
+        HttpRequestBody requestBody = parseHttpRequestBody(requestHeader.findContentLength(), bufferedReader);
 
         return new HttpRequest(requestStartLine, requestHeader, requestBody);
     }
@@ -36,14 +36,28 @@ public class HttpRequest {
     }
 
     private static HttpRequestHeader parseHttpRequestHeader(final BufferedReader bufferedReader) throws IOException {
-        return HttpRequestHeader.from(bufferedReader);
+
+        StringBuilder httpRequestHeaderBuilder = new StringBuilder();
+        String requestTarget = bufferedReader.readLine();
+        while (!requestTarget.isEmpty()) {
+            httpRequestHeaderBuilder.append(requestTarget).append("\r\n");
+            requestTarget = bufferedReader.readLine();
+        }
+
+        // Http 헤더와 Body 사이의 BLANK 라인 추가
+        httpRequestHeaderBuilder.append(requestTarget).append("\r\n");
+
+        return HttpRequestHeader.from(httpRequestHeaderBuilder.toString());
     }
 
-    private static HttpRequestBody parseHttpRequestBody(final BufferedReader bufferedReader) throws IOException {
-        String requestTarget = bufferedReader.readLine();
+    private static HttpRequestBody parseHttpRequestBody(final String contentLength,
+                                                        final BufferedReader bufferedReader) throws IOException {
+        int findContentLength = Integer.parseInt(contentLength);
+        char[] requestHttpBody = new char[findContentLength];
 
-
-        return HttpRequestBody.from(requestTarget);
+        // 0부터 content-length까지 한글자씩 잘라서 문자배열에 담아준다.
+        bufferedReader.read(requestHttpBody, 0, findContentLength);
+        return HttpRequestBody.from(new String(requestHttpBody));
     }
 
 
