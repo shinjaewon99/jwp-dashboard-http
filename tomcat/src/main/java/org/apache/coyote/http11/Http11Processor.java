@@ -4,6 +4,7 @@ import nextstep.jwp.db.InMemoryUserRepository;
 import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
+import org.apache.coyote.http11.request.HttpRequest;
 import org.apache.coyote.http11.request.HttpRequestStartLine;
 import org.apache.coyote.http11.response.HttpResponse;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static org.apache.coyote.http11.request.HttpRequestStartLine.parseHttpRequestStartLine;
 
 public class Http11Processor implements Runnable, Processor {
 
@@ -49,8 +49,10 @@ public class Http11Processor implements Runnable, Processor {
             final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             // HTTP 요청의 첫번째 라인
-            final HttpRequestStartLine requestStartLine = parseHttpRequestStartLine(bufferedReader.readLine());
-            final String response = httpRequestHandler(requestStartLine.getRequestTarget());
+            final HttpRequest requestStartLine = HttpRequest.from(bufferedReader);
+            HttpRequestStartLine httpRequestStartLine = requestStartLine.getHttpRequestStartLine();
+
+            final String response = httpRequestHandler(httpRequestStartLine.getRequestTarget());
 
             outputStream.write(response.getBytes());
             outputStream.flush();
@@ -69,14 +71,14 @@ public class Http11Processor implements Runnable, Processor {
         }
 
         // /login 경로 일때
-        if(requestTarget.equals("/login")){
+        if (requestTarget.equals("/login")) {
             Map<String, String> parseQueryString = parseQueryString(requestTarget);
             User user = findAccount(parseQueryString);
 
             boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
 
             // 비밀번호가 불일치 할경우
-            if(!checkedPassword){
+            if (!checkedPassword) {
                 log.info("PASSWORD 불일치" + user.getAccount());
                 throw new AuthenticationException();
             }
