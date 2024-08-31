@@ -27,7 +27,6 @@ import java.util.NoSuchElementException;
 public class Http11Processor implements Runnable, Processor {
 
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
-    private static final int INDEX_URI = 1;
     private static final String QUERY_STRING_ACCOUNT = "account";
     private static final String QUERY_STRING_PASSWORD = "password";
     private final Socket connection;
@@ -72,19 +71,7 @@ public class Http11Processor implements Runnable, Processor {
 
         // /login 경로 일때
         if (requestTarget.equals("/login")) {
-            Map<String, String> parseQueryString = parseQueryString(requestTarget);
-            User user = findAccount(parseQueryString);
-
-            boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
-
-            // 비밀번호가 불일치 할경우
-            if (!checkedPassword) {
-                log.info("PASSWORD 불일치" + user.getAccount());
-                throw new AuthenticationException();
-            }
-
-            final String responseBody = createUrlResource(requestTarget);
-            return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
+            return createLogin(requestTarget);
         }
 
         final String responseBody = createUrlResource(requestTarget);
@@ -92,24 +79,25 @@ public class Http11Processor implements Runnable, Processor {
         return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
     }
 
-    private User findAccount(Map<String, String> parseQueryString) {
-        String findAccount = parseQueryString.get(QUERY_STRING_ACCOUNT);
-        return InMemoryUserRepository.findByAccount(findAccount).orElseThrow(NoSuchElementException::new);
-    }
+    private String createLogin(final String requestTarget) throws IOException {
+        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
+        final User user = findAccount(parseQueryString);
 
-    private String createUrlResource(String requestTarget) throws IOException {
-        // 루트 경로가 아닐경우
-        final URL resource = getClass()
-                .getClassLoader()
-                .getResource("static" + requestTarget);
+        boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
 
-        if (resource == null) {
-            // 리소스를 찾지 못한 경우에 대한 처리
-            throw new FileNotFoundException("Resource not found: " + requestTarget);
+        // 비밀번호가 불일치 할경우
+        if (!checkedPassword) {
+            log.info("PASSWORD 불일치" + user.getAccount());
+            throw new AuthenticationException();
         }
 
-        final String filePath = resource.getFile();
-        return new String(Files.readAllBytes(Paths.get(filePath)));
+        final String responseBody = createUrlResource(requestTarget);
+        return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
+    }
+
+    private User findAccount(final Map<String, String> parseQueryString) {
+        final String findAccount = parseQueryString.get(QUERY_STRING_ACCOUNT);
+        return InMemoryUserRepository.findByAccount(findAccount).orElseThrow(NoSuchElementException::new);
     }
 
     private Map<String, String> parseQueryString(final String requestTarget) {
@@ -140,5 +128,20 @@ public class Http11Processor implements Runnable, Processor {
             }
         }
         return queryParams;
+    }
+
+    private String createUrlResource(String requestTarget) throws IOException {
+        // 루트 경로가 아닐경우
+        final URL resource = getClass()
+                .getClassLoader()
+                .getResource("static" + requestTarget);
+
+        if (resource == null) {
+            // 리소스를 찾지 못한 경우에 대한 처리
+            throw new FileNotFoundException("Resource not found: " + requestTarget);
+        }
+
+        final String filePath = resource.getFile();
+        return new String(Files.readAllBytes(Paths.get(filePath)));
     }
 }
