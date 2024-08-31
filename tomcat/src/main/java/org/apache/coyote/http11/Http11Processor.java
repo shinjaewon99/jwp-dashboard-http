@@ -4,13 +4,12 @@ import nextstep.jwp.db.InMemoryUserRepository;
 import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
-import org.apache.coyote.http11.request.HttpRequest;
-import org.apache.coyote.http11.request.HttpRequestStartLine;
-import org.apache.coyote.http11.response.HttpResponse;
+import org.apache.coyote.http11.request.*;
+import org.apache.coyote.http11.response.HttpResponseEntity;
+import org.apache.coyote.http11.response.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.security.sasl.AuthenticationException;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,54 +48,66 @@ public class Http11Processor implements Runnable, Processor {
 
             // HTTP 요청의 첫번째 라인
             final HttpRequest requestStartLine = HttpRequest.from(bufferedReader);
-            HttpRequestStartLine httpRequestStartLine = requestStartLine.getHttpRequestStartLine();
+            final HttpRequestStartLine httpRequestStartLine = requestStartLine.getHttpRequestStartLine();
+            final HttpRequestHeader httpRequestHeader = requestStartLine.getHttpRequestHeader();
+            final HttpRequestBody httpRequestBody = requestStartLine.getHttpRequestBody();
 
-            final String response = httpRequestHandler(httpRequestStartLine.getRequestTarget());
+            final HttpResponseEntity response = createHttpResponse(httpRequestStartLine, httpRequestHeader, httpRequestBody);
 
-            outputStream.write(response.getBytes());
+            outputStream.write(response.getRequestTarget().getBytes());
             outputStream.flush();
         } catch (IOException | UncheckedServletException e) {
             log.error(e.getMessage(), e);
         }
     }
 
-    private String httpRequestHandler(final String requestTarget) throws IOException {
+    private HttpResponseEntity createHttpResponse(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
+                                                  final HttpRequestBody httpRequestBody) throws IOException {
+
+        final String requestTarget = httpRequestStartLine.getRequestTarget();
 
         // "/" 루트 경로일때
         if (requestTarget.equals("/")) {
             final var responseBody = "Hello world!";
 
-            return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
+            return HttpResponseEntity.of(HttpStatus.OK, requestTarget, responseBody);
         }
 
         // /login 경로 일때
         if (requestTarget.equals("/login")) {
-            return createLogin(requestTarget);
+            return createLogin(requestTarget, httpRequestStartLine, httpRequestHeader, httpRequestBody);
         }
 
         final String responseBody = createUrlResource(requestTarget);
 
-        return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
+        return HttpResponseEntity.of(HttpStatus.OK, requestTarget, responseBody);
     }
 
-    private String createLogin(final String requestTarget) throws IOException {
-        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
-        final User user = findAccount(parseQueryString);
+    private HttpResponseEntity createLogin(final String requestTarget, final HttpRequestStartLine httpRequestStartLine,
+                                           final HttpRequestHeader httpRequestHeader, final HttpRequestBody httpRequestBody) throws IOException {
+        HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
+
+        if (httpMethod == HttpMethod.GET) {
+            return HttpResponseEntity.of(HttpStatus.OK, requestTarget, null);
+        }
+
+        Map<String, String> parseQueryString = parseQueryString(requestTarget);
+        User user = findAccount(parseQueryString);
 
         boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
 
         // 비밀번호가 불일치 할경우
         if (!checkedPassword) {
             log.info("PASSWORD 불일치" + user.getAccount());
-            return HttpResponse.of("401 UNAUTHORIZED", "/login.html", null).getHttpResponse();
+            return HttpResponseEntity.of(HttpStatus.UNAUTHORIZED, requestTarget, null);
         }
 
         final String responseBody = createUrlResource(requestTarget);
-        return HttpResponse.of("200 OK", requestTarget, responseBody).getHttpResponse();
+        return HttpResponseEntity.of(HttpStatus.FOUND, requestTarget, responseBody);
     }
 
-    private User findAccount(final Map<String, String> parseQueryString) {
-        final String findAccount = parseQueryString.get(QUERY_STRING_ACCOUNT);
+    private User findAccount(Map<String, String> parseQueryString) {
+        String findAccount = parseQueryString.get(QUERY_STRING_ACCOUNT);
         return InMemoryUserRepository.findByAccount(findAccount).orElseThrow(NoSuchElementException::new);
     }
 
