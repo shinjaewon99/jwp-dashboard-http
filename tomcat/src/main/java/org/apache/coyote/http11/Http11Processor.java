@@ -88,7 +88,7 @@ public class Http11Processor implements Runnable, Processor {
         // 비밀번호가 불일치 할경우
         if (!checkedPassword) {
             log.info("PASSWORD 불일치" + user.getAccount());
-            throw new AuthenticationException();
+            return HttpResponse.of("401 UNAUTHORIZED", "/login.html", null).getHttpResponse();
         }
 
         final String responseBody = createUrlResource(requestTarget);
