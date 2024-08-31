@@ -1,17 +1,17 @@
 package org.apache.coyote.http11.response;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @Getter
+@Builder
 @RequiredArgsConstructor
 public class HttpResponseEntity {
 
     private final HttpStatus httpStatus;
     private final String requestTarget;
     private final String responseBody;
+    private final ResponsePage responsePage;
 
-    public static HttpResponseEntity of(final HttpStatus httpStatus, final String requestTarget, final String responseBody) {
-        return new HttpResponseEntity(httpStatus, requestTarget, responseBody);
-    }
 }

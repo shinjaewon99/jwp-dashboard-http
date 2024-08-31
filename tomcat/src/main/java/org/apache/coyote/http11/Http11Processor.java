@@ -5,8 +5,10 @@ import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
 import org.apache.coyote.http11.request.*;
+import org.apache.coyote.http11.response.HttpResponse;
 import org.apache.coyote.http11.response.HttpResponseEntity;
 import org.apache.coyote.http11.response.HttpStatus;
+import org.apache.coyote.http11.response.ResponsePage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,9 +54,10 @@ public class Http11Processor implements Runnable, Processor {
             final HttpRequestHeader httpRequestHeader = requestStartLine.getHttpRequestHeader();
             final HttpRequestBody httpRequestBody = requestStartLine.getHttpRequestBody();
 
-            final HttpResponseEntity response = createHttpResponse(httpRequestStartLine, httpRequestHeader, httpRequestBody);
+            final HttpResponseEntity responseEntity = createHttpResponse(httpRequestStartLine, httpRequestHeader, httpRequestBody);
+            final String response = HttpResponse.from(responseEntity).getHttpResponse();
 
-            outputStream.write(response.getRequestTarget().getBytes());
+            outputStream.write(response.getBytes());
             outputStream.flush();
         } catch (IOException | UncheckedServletException e) {
             log.error(e.getMessage(), e);
@@ -70,40 +73,67 @@ public class Http11Processor implements Runnable, Processor {
         if (requestTarget.equals("/")) {
             final var responseBody = "Hello world!";
 
-            return HttpResponseEntity.of(HttpStatus.OK, requestTarget, responseBody);
+            return HttpResponseEntity
+                    .builder()
+                    .httpStatus(HttpStatus.OK)
+                    .requestTarget(requestTarget)
+                    .responseBody(responseBody)
+                    .build();
         }
 
         // /login 경로 일때
         if (requestTarget.equals("/login")) {
-            return createLogin(requestTarget, httpRequestStartLine, httpRequestHeader, httpRequestBody);
+            return createLogin(httpRequestStartLine, httpRequestHeader, httpRequestBody);
         }
 
         final String responseBody = createUrlResource(requestTarget);
 
-        return HttpResponseEntity.of(HttpStatus.OK, requestTarget, responseBody);
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.OK)
+                .requestTarget(requestTarget)
+                .responseBody(responseBody)
+                .build();
     }
 
-    private HttpResponseEntity createLogin(final String requestTarget, final HttpRequestStartLine httpRequestStartLine,
+    private HttpResponseEntity createLogin(final HttpRequestStartLine httpRequestStartLine,
                                            final HttpRequestHeader httpRequestHeader, final HttpRequestBody httpRequestBody) throws IOException {
         HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
+        String requestTarget = httpRequestStartLine.getRequestTarget();
 
         if (httpMethod == HttpMethod.GET) {
-            return HttpResponseEntity.of(HttpStatus.OK, requestTarget, null);
+            return HttpResponseEntity
+                    .builder()
+                    .httpStatus(HttpStatus.OK)
+                    .requestTarget(requestTarget)
+                    .responsePage(ResponsePage.LOGIN_PAGE_URI)
+                    .build();
         }
 
-        Map<String, String> parseQueryString = parseQueryString(requestTarget);
-        User user = findAccount(parseQueryString);
+        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
+        final User user = findAccount(parseQueryString);
 
         boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
 
         // 비밀번호가 불일치 할경우
         if (!checkedPassword) {
             log.info("PASSWORD 불일치" + user.getAccount());
-            return HttpResponseEntity.of(HttpStatus.UNAUTHORIZED, requestTarget, null);
+            return HttpResponseEntity
+                    .builder()
+                    .httpStatus(HttpStatus.UNAUTHORIZED)
+                    .requestTarget(requestTarget)
+                    .responsePage(ResponsePage.UNAUTHORIZED_PAGE_URI)
+                    .build();
         }
 
         final String responseBody = createUrlResource(requestTarget);
-        return HttpResponseEntity.of(HttpStatus.FOUND, requestTarget, responseBody);
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.FOUND)
+                .requestTarget(requestTarget)
+                .responsePage(ResponsePage.INDEX_PAGE_URI)
+                .responseBody(responseBody)
+                .build();
     }
 
     private User findAccount(Map<String, String> parseQueryString) {
