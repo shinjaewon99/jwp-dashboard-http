@@ -1,8 +1,11 @@
 package org.apache.coyote.http11.request;
 
+import lombok.Getter;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 
+@Getter
 public class HttpRequest {
 
     private final HttpRequestStartLine httpRequestStartLine;
@@ -58,18 +61,5 @@ public class HttpRequest {
         // 0부터 content-length까지 한글자씩 잘라서 문자배열에 담아준다.
         bufferedReader.read(requestHttpBody, 0, findContentLength);
         return HttpRequestBody.from(new String(requestHttpBody));
-    }
-
-
-    public HttpRequestStartLine getHttpRequestStartLine() {
-        return httpRequestStartLine;
-    }
-
-    public HttpRequestHeader getHttpRequestHeader() {
-        return httpRequestHeader;
-    }
-
-    public HttpRequestBody getHttpRequestBody() {
-        return httpRequestBody;
     }
 }

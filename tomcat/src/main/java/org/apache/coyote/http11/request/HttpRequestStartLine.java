@@ -1,10 +1,12 @@
 package org.apache.coyote.http11.request;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+@Getter
 public class HttpRequestStartLine {
 
     private static final Logger log = LoggerFactory.getLogger(HttpRequestStartLine.class);
@@ -33,17 +35,5 @@ public class HttpRequestStartLine {
         if (requestStartLine.length != 3) {
             throw new IllegalStateException();
         }
-    }
-
-    public HttpMethod getHttpMethod() {
-        return httpMethod;
-    }
-
-    public String getRequestTarget() {
-        return requestTarget;
-    }
-
-    public String getHttpVersion() {
-        return httpVersion;
     }
 }
