@@ -17,4 +17,8 @@ public class HttpCookie {
     public String findCookieValue(final String cookieKey) {
         return cookies.get(cookieKey);
     }
+
+    public void put(final String key, final String value) {
+        cookies.put(key, value);
+    }
 }

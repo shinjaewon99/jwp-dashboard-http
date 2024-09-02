@@ -9,6 +9,7 @@ import org.apache.coyote.http11.response.HttpResponse;
 import org.apache.coyote.http11.response.HttpResponseEntity;
 import org.apache.coyote.http11.response.HttpStatus;
 import org.apache.coyote.http11.response.ResponsePage;
+import org.apache.coyote.http11.session.JSessionIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,7 @@ public class Http11Processor implements Runnable, Processor {
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
     private static final String ACCOUNT_FIELD = "account";
     private static final String PASSWORD_FIELD = "password";
-    private static final String EMAIL_FIELD = "email";
+    private static final String EMAIL_FIELD ="email";
     private final Socket connection;
 
     public Http11Processor(final Socket connection) {
@@ -133,16 +134,19 @@ public class Http11Processor implements Runnable, Processor {
                     .build();
         }
 
+
         final String responseBody = createUrlResource(requestTarget);
 
         log.info("account {} 로그인 성공", user.getAccount());
-        return HttpResponseEntity
+        HttpResponseEntity httpResponseEntity = HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.FOUND)
                 .requestTarget(requestTarget)
                 .responsePage(ResponsePage.INDEX_PAGE_URI)
                 .responseBody(responseBody)
                 .build();
+        httpResponseEntity.setCookie("JSESSIONID", JSessionIdGenerator.generateSessionId());
+        return httpResponseEntity;
     }
 
     private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
@@ -225,3 +229,4 @@ public class Http11Processor implements Runnable, Processor {
         return new String(Files.readAllBytes(Paths.get(filePath)));
     }
 }
+
