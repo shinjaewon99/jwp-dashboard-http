@@ -86,6 +86,11 @@ public class Http11Processor implements Runnable, Processor {
             return createLogin(httpRequestStartLine, httpRequestHeader, httpRequestBody);
         }
 
+        // register 경로 일때
+        if (requestTarget.startsWith("/register")) {
+            return createRegister(httpRequestStartLine, httpRequestHeader, httpRequestBody);
+        }
+
         final String responseBody = createUrlResource(requestTarget);
 
         return HttpResponseEntity
@@ -136,6 +141,22 @@ public class Http11Processor implements Runnable, Processor {
                 .responsePage(ResponsePage.INDEX_PAGE_URI)
                 .responseBody(responseBody)
                 .build();
+    }
+
+    private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
+                                              final HttpRequestBody httpRequestBody) {
+        final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
+        final String requestTarget = httpRequestStartLine.getRequestTarget();
+
+        if (httpMethod == HttpMethod.GET) {
+            return HttpResponseEntity.builder()
+                    .httpStatus(HttpStatus.OK)
+                    .requestTarget(requestTarget)
+                    .responsePage(ResponsePage.REGISTER_PAGE_URI)
+                    .build();
+        }
+
+        return null;
     }
 
     private User findAccount(Map<String, String> parseQueryString) {
