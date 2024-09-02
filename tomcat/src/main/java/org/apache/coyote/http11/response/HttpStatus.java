@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum HttpStatus {
 
     OK("200"),
+    CREATED("201"),
     FOUND("302"),
     UNAUTHORIZED("401");
 
