@@ -82,7 +82,7 @@ public class Http11Processor implements Runnable, Processor {
         }
 
         // /login 경로 일때
-        if (requestTarget.equals("/login")) {
+        if (requestTarget.startsWith("/login")) {
             return createLogin(httpRequestStartLine, httpRequestHeader, httpRequestBody);
         }
 
@@ -98,10 +98,11 @@ public class Http11Processor implements Runnable, Processor {
 
     private HttpResponseEntity createLogin(final HttpRequestStartLine httpRequestStartLine,
                                            final HttpRequestHeader httpRequestHeader, final HttpRequestBody httpRequestBody) throws IOException {
-        HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
-        String requestTarget = httpRequestStartLine.getRequestTarget();
+        final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
+        final String requestTarget = httpRequestStartLine.getRequestTarget();
+        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
 
-        if (httpMethod == HttpMethod.GET) {
+        if (httpMethod == HttpMethod.GET && parseQueryString.isEmpty()) {
             return HttpResponseEntity
                     .builder()
                     .httpStatus(HttpStatus.OK)
@@ -110,7 +111,6 @@ public class Http11Processor implements Runnable, Processor {
                     .build();
         }
 
-        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
         final User user = findAccount(parseQueryString);
 
         boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
@@ -127,6 +127,8 @@ public class Http11Processor implements Runnable, Processor {
         }
 
         final String responseBody = createUrlResource(requestTarget);
+
+        log.info("account {} 로그인 성공", user.getAccount());
         return HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.FOUND)
