@@ -28,8 +28,9 @@ import java.util.NoSuchElementException;
 public class Http11Processor implements Runnable, Processor {
 
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
-    private static final String QUERY_STRING_ACCOUNT = "account";
-    private static final String QUERY_STRING_PASSWORD = "password";
+    private static final String ACCOUNT_FIELD = "account";
+    private static final String PASSWORD_FIELD = "password";
+    private static final String EMAIL_FIELD = "email";
     private final Socket connection;
 
     public Http11Processor(final Socket connection) {
@@ -105,9 +106,9 @@ public class Http11Processor implements Runnable, Processor {
                                            final HttpRequestHeader httpRequestHeader, final HttpRequestBody httpRequestBody) throws IOException {
         final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
         final String requestTarget = httpRequestStartLine.getRequestTarget();
-        final Map<String, String> parseQueryString = parseQueryString(requestTarget);
+        final String account = httpRequestBody.findBodyValue(ACCOUNT_FIELD);
 
-        if (httpMethod == HttpMethod.GET && parseQueryString.isEmpty()) {
+        if (httpMethod == HttpMethod.GET && account == null) {
             return HttpResponseEntity
                     .builder()
                     .httpStatus(HttpStatus.OK)
@@ -116,9 +117,10 @@ public class Http11Processor implements Runnable, Processor {
                     .build();
         }
 
-        final User user = findAccount(parseQueryString);
+        final User user = findAccount(account);
+        final String password = httpRequestBody.findBodyValue(PASSWORD_FIELD);
 
-        boolean checkedPassword = user.checkPassword(parseQueryString.get(QUERY_STRING_PASSWORD));
+        boolean checkedPassword = user.checkPassword(password);
 
         // 비밀번호가 불일치 할경우
         if (!checkedPassword) {
@@ -157,26 +159,25 @@ public class Http11Processor implements Runnable, Processor {
                     .build();
         }
 
-        String account = httpRequestBody.findBodyValue("account");
-        String password = httpRequestBody.findBodyValue("password");
-        String email = httpRequestBody.findBodyValue("email");
+        final String account = httpRequestBody.findBodyValue(ACCOUNT_FIELD);
+        final String password = httpRequestBody.findBodyValue(PASSWORD_FIELD);
+        final String email = httpRequestBody.findBodyValue(EMAIL_FIELD);
 
-        User user = new User(account, password, email);
+        final User user = new User(account, password, email);
         InMemoryUserRepository.save(user);
 
         log.info("{} user 회원가입 성공", account);
 
         return HttpResponseEntity
                 .builder()
-                .httpStatus(HttpStatus.CREATED)
+                .httpStatus(HttpStatus.FOUND)
                 .requestTarget(requestTarget)
                 .responsePage(ResponsePage.INDEX_PAGE_URI)
                 .build();
     }
 
-    private User findAccount(Map<String, String> parseQueryString) {
-        String findAccount = parseQueryString.get(QUERY_STRING_ACCOUNT);
-        return InMemoryUserRepository.findByAccount(findAccount).orElseThrow(NoSuchElementException::new);
+    private User findAccount(final String account) {
+        return InMemoryUserRepository.findByAccount(account).orElseThrow(NoSuchElementException::new);
     }
 
     private Map<String, String> parseQueryString(final String requestTarget) {
