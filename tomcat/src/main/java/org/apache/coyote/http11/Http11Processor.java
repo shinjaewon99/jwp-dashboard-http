@@ -149,14 +149,29 @@ public class Http11Processor implements Runnable, Processor {
         final String requestTarget = httpRequestStartLine.getRequestTarget();
 
         if (httpMethod == HttpMethod.GET) {
-            return HttpResponseEntity.builder()
+            return HttpResponseEntity
+                    .builder()
                     .httpStatus(HttpStatus.OK)
                     .requestTarget(requestTarget)
                     .responsePage(ResponsePage.REGISTER_PAGE_URI)
                     .build();
         }
 
-        return null;
+        String account = httpRequestBody.findBodyValue("account");
+        String password = httpRequestBody.findBodyValue("password");
+        String email = httpRequestBody.findBodyValue("email");
+
+        User user = new User(account, password, email);
+        InMemoryUserRepository.save(user);
+
+        log.info("{} user 회원가입 성공", account);
+
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.CREATED)
+                .requestTarget(requestTarget)
+                .responsePage(ResponsePage.INDEX_PAGE_URI)
+                .build();
     }
 
     private User findAccount(Map<String, String> parseQueryString) {
