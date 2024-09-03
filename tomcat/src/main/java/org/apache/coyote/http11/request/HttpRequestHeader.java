@@ -1,6 +1,7 @@
 package org.apache.coyote.http11.request;
 
-import java.io.BufferedReader;
+import org.apache.coyote.http11.cookie.HttpCookie;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +14,10 @@ public class HttpRequestHeader {
         this.headers = new HashMap<>(headers);
     }
 
-    public static HttpRequestHeader from (final String requestTarget) throws IOException {
+    private HttpRequestHeader() {
+    }
+
+    public static HttpRequestHeader from(final String requestTarget) throws IOException {
         Map<String, String> headerMap = new HashMap<>();
 
         while (!(requestTarget.isEmpty())) {
@@ -32,5 +36,9 @@ public class HttpRequestHeader {
 
     public String findContentLength() {
         return headers.get("Content-Length");
+    }
+
+    public HttpCookie getCookie() {
+        return HttpCookie.from(headers.get("Cookie"));
     }
 }
