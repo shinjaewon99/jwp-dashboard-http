@@ -2,6 +2,7 @@ package org.apache.coyote.http11.response;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.http11.cookie.HttpCookie;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,8 +21,7 @@ public class HttpResponse {
     private final String formatHttpResponse;
 
     public static HttpResponse from(final HttpResponseEntity httpResponse) throws IOException {
-        final HttpStatus httpStatus = httpResponse.getHttpStatus();
-        final String fullHttpStatus = httpStatus.getHttpStatusCode() + " " + httpStatus.name();
+
         final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
         final String requestTarget = httpResponse.getRequestTarget();
         String responseBody = httpResponse.getResponseBody();
@@ -35,25 +35,15 @@ public class HttpResponse {
 
         return new HttpResponse(String.join(
                 CRLF,
-                generateHttpStatus(fullHttpStatus),
+                generateHttpStatus(httpResponse.getHttpStatus()),
                 generateContentType(requestTarget),
                 generateContentLength(responseBody),
                 BLANK_LINE,
                 responseBody));
     }
 
-    public static HttpResponse of(final String statusCode, final String requestTarget, final String responseBody) {
-        return new HttpResponse(String.join(
-                CRLF,
-                generateHttpStatus(statusCode),
-                generateContentType(requestTarget),
-                generateContentLength(responseBody),
-                BLANK_LINE,
-                responseBody));
-    }
-
-    private static String generateHttpStatus(final String statusCode) {
-        return "HTTP/1.1 " + statusCode + " ";
+    private static String generateHttpStatus(final HttpStatus httpStatus) {
+        return "HTTP/1.1 " + httpStatus.getHttpStatusCode() + " " + httpStatus.name();
     }
 
     private static String generateContentType(final String requestTarget) {
@@ -62,6 +52,14 @@ public class HttpResponse {
 
     private static String generateContentLength(final String responseBody) {
         return "Content-Length: " + responseBody.getBytes().length + " ";
+    }
+
+    private static String generateCookie(final HttpResponseEntity httpResponse) {
+        HttpCookie httpCookie = httpResponse.getHttpCookie();
+
+        String jSessionId = httpCookie.getJSessionId();
+
+        return "Set-Cookie: JSESSIONID=" + jSessionId + "; ";
     }
 
     private static String loadContentType(final String requestTarget) {
