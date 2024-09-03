@@ -24,22 +24,36 @@ public class HttpResponse {
 
         final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
         final String requestTarget = httpResponse.getRequestTarget();
+        final HttpStatus httpStatus = httpResponse.getHttpStatus();
         String responseBody = httpResponse.getResponseBody();
 
         // Http 응답중 body가 비어있는경우
         if (responseBody == null) {
-            URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
-            File file = new File(resource.getFile());
-            responseBody = new String(Files.readAllBytes(file.toPath()));
+            responseBody = loadResponseBody(htmlUri);
+        }
+
+        if (httpStatus == HttpStatus.FOUND) {
+            return new HttpResponse(String.join(
+                    CRLF,
+                    generateHttpStatus(httpStatus),
+                    generateLocation(httpResponse),
+                    generateCookie(httpResponse)
+            ));
         }
 
         return new HttpResponse(String.join(
                 CRLF,
-                generateHttpStatus(httpResponse.getHttpStatus()),
+                generateHttpStatus(httpStatus),
                 generateContentType(requestTarget),
                 generateContentLength(responseBody),
                 BLANK_LINE,
                 responseBody));
+    }
+
+    private static String loadResponseBody(final String htmlUri) throws IOException {
+        URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
+        File file = new File(resource.getFile());
+        return new String(Files.readAllBytes(file.toPath()));
     }
 
     private static String generateHttpStatus(final HttpStatus httpStatus) {
@@ -53,6 +67,13 @@ public class HttpResponse {
     private static String generateContentLength(final String responseBody) {
         return "Content-Length: " + responseBody.getBytes().length + " ";
     }
+
+    private static String generateLocation(final HttpResponseEntity httpResponse) {
+        String htmlUri = httpResponse.getResponsePage().getHtmlUri();
+
+        return "Location:" + htmlUri + " ";
+    }
+
 
     private static String generateCookie(final HttpResponseEntity httpResponse) {
         HttpCookie httpCookie = httpResponse.getHttpCookie();
