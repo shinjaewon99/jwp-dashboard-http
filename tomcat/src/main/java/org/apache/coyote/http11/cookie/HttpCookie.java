@@ -21,4 +21,8 @@ public class HttpCookie {
     public void put(final String key, final String value) {
         cookies.put(key, value);
     }
+
+    public String getJSessionId() {
+        return cookies.get("JSESSIONID");
+    }
 }
