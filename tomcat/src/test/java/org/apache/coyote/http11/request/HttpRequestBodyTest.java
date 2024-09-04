@@ -1,27 +1,37 @@
 package org.apache.coyote.http11.request;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 class HttpRequestBodyTest {
 
     @Test
-    @DisplayName("HTTP 요청 바디에서 key-value 쌍을 올바르게 파싱하는지 검증")
-    void createHttpRequestBody() throws IOException {
+    void HTTP_요청_바디_생성_테스트() throws IOException {
         // given
-        String requestBodyString = "account=shin&password=1234@123";
+        final String httpRequest =
+                "account=shin&password=123";
 
         // when
-        HttpRequestBody httpRequestBody = HttpRequestBody.from(requestBodyString);
+        HttpRequestBody httpRequestBody = HttpRequestBody.from(httpRequest);
 
         // then
         assertThat(httpRequestBody).isNotNull();
+    }
+
+    @Test
+    void HTTP_요청_바디_VALUE_테스트() throws IOException {
+        // given
+        final String httpRequest =
+                "account=shin&password=123";
+
+        // when
+        HttpRequestBody httpRequestBody = HttpRequestBody.from(httpRequest);
+
+        // then
         assertThat(httpRequestBody.findBodyValue("account")).isEqualTo("shin");
-        assertThat(httpRequestBody.findBodyValue("password")).isEqualTo("1234@123");
+        assertThat(httpRequestBody.findBodyValue("password")).isEqualTo("123");
     }
 }
