@@ -20,13 +20,12 @@ public class HttpRequestHeader {
     public static HttpRequestHeader from(final String requestTarget) throws IOException {
         Map<String, String> headerMap = new HashMap<>();
 
-        while (!(requestTarget.isEmpty())) {
-            String[] lines = requestTarget.split("\r\n");
-            for (String line : lines) {
-                String[] split = line.split(": ");
-                headerMap.put(split[0], split[1]);
-            }
+        String[] lines = requestTarget.split("\r\n");
+        for (String line : lines) {
+            String[] split = line.split(": ");
+            headerMap.put(split[0], split[1]);
         }
+
         return new HttpRequestHeader(headerMap);
     }
 
