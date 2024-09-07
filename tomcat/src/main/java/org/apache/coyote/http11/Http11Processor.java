@@ -21,8 +21,6 @@ import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 
@@ -31,7 +29,7 @@ public class Http11Processor implements Runnable, Processor {
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
     private static final String ACCOUNT_FIELD = "account";
     private static final String PASSWORD_FIELD = "password";
-    private static final String EMAIL_FIELD ="email";
+    private static final String EMAIL_FIELD = "email";
     private final Socket connection;
 
     public Http11Processor(final Socket connection) {
@@ -73,14 +71,7 @@ public class Http11Processor implements Runnable, Processor {
 
         // "/" 루트 경로일때
         if (requestTarget.equals("/")) {
-            final var responseBody = "Hello world!";
-
-            return HttpResponseEntity
-                    .builder()
-                    .httpStatus(HttpStatus.OK)
-                    .requestTarget(requestTarget)
-                    .responseBody(responseBody)
-                    .build();
+            return createMainPage(requestTarget);
         }
 
         // /login 경로 일때
@@ -100,6 +91,18 @@ public class Http11Processor implements Runnable, Processor {
                 .httpStatus(HttpStatus.OK)
                 .requestTarget(requestTarget)
                 .responseBody(responseBody)
+                .build();
+    }
+
+    private HttpResponseEntity createMainPage(final String requestTarget) {
+        final var responseBody = "Hello world!";
+
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.OK)
+                .requestTarget(requestTarget)
+                .responseBody(responseBody)
+                .responsePage(ResponsePage.EMPTY)
                 .build();
     }
 
