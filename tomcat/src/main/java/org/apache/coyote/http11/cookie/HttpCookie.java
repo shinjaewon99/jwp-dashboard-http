@@ -1,21 +1,24 @@
 package org.apache.coyote.http11.cookie;
 
+import lombok.Getter;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@Getter
 public class HttpCookie {
 
     private static final String SEPARATOR = "; ";
     private static final String DELIMITER = "=";
 
-    private final Map<String, String> cookies;
+    private final Map<String, String> cookies = new HashMap<>();
 
     public HttpCookie(Map<String, String> cookies) {
-        this.cookies = new HashMap<>(cookies);
+        this.cookies.putAll(cookies);
     }
 
     private HttpCookie() {
-        this.cookies = new HashMap<>();
+
     }
 
     public static HttpCookie from(final String cookie) {
