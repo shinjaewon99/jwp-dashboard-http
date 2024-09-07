@@ -39,9 +39,9 @@ public class HttpRequest {
     }
 
     private static HttpRequestHeader parseHttpRequestHeader(final BufferedReader bufferedReader) throws IOException {
-
         StringBuilder httpRequestHeaderBuilder = new StringBuilder();
         String requestTarget = bufferedReader.readLine();
+
         while (!requestTarget.isEmpty()) {
             httpRequestHeaderBuilder.append(requestTarget).append("\r\n");
             requestTarget = bufferedReader.readLine();
@@ -55,6 +55,10 @@ public class HttpRequest {
 
     private static HttpRequestBody parseHttpRequestBody(final String contentLength,
                                                         final BufferedReader bufferedReader) throws IOException {
+        if(contentLength == null) {
+            return HttpRequestBody.httpRequestBodyNone();
+        }
+
         int findContentLength = Integer.parseInt(contentLength);
         char[] requestHttpBody = new char[findContentLength];
 
