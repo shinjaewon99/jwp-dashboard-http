@@ -21,6 +21,10 @@ public class HttpCookie {
 
     }
 
+    public static HttpCookie empty() {
+        return new HttpCookie();
+    }
+
     public static HttpCookie from(final String cookie) {
         Map<String, String> cookiesStore = new HashMap<>();
         String[] lines = cookie.split(SEPARATOR);
