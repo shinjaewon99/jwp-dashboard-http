@@ -10,13 +10,12 @@ import org.apache.coyote.http11.response.HttpResponseEntity;
 import org.apache.coyote.http11.response.HttpStatus;
 import org.apache.coyote.http11.response.ResponsePage;
 import org.apache.coyote.http11.session.JSessionIdGenerator;
+import org.apache.coyote.http11.session.Session;
+import org.apache.coyote.http11.session.SessionManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
@@ -30,6 +29,7 @@ public class Http11Processor implements Runnable, Processor {
     private static final String ACCOUNT_FIELD = "account";
     private static final String PASSWORD_FIELD = "password";
     private static final String EMAIL_FIELD = "email";
+    private final SessionManager sessionManager = new SessionManager();
     private final Socket connection;
 
     public Http11Processor(final Socket connection) {
@@ -84,14 +84,7 @@ public class Http11Processor implements Runnable, Processor {
             return createRegister(httpRequestStartLine, httpRequestHeader, httpRequestBody);
         }
 
-        final String responseBody = createUrlResource(requestTarget);
-
-        return HttpResponseEntity
-                .builder()
-                .httpStatus(HttpStatus.OK)
-                .requestTarget(requestTarget)
-                .responseBody(responseBody)
-                .build();
+        return findStaticResource(requestTarget);
     }
 
     private HttpResponseEntity createMainPage(final String requestTarget) {
@@ -128,28 +121,65 @@ public class Http11Processor implements Runnable, Processor {
 
         // 비밀번호가 불일치 할경우
         if (!checkedPassword) {
-            log.info("PASSWORD 불일치" + user.getAccount());
-            return HttpResponseEntity
-                    .builder()
-                    .httpStatus(HttpStatus.UNAUTHORIZED)
-                    .requestTarget(requestTarget)
-                    .responsePage(ResponsePage.UNAUTHORIZED_PAGE_URI)
-                    .build();
+            return createLoginFail(requestTarget, user);
         }
 
+        return createLoginSuccess(requestTarget, user);
+    }
 
-        final String responseBody = createUrlResource(requestTarget);
+    private HttpResponseEntity createLoginFail(final String requestTarget, final User user) {
+        log.info("PASSWORD 불일치" + user.getAccount());
 
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.UNAUTHORIZED)
+                .requestTarget(requestTarget)
+                .responsePage(ResponsePage.UNAUTHORIZED_PAGE_URI)
+                .build();
+    }
+
+    private HttpResponseEntity createLoginSuccess(final String requestTarget, final User user) {
         log.info("account {} 로그인 성공", user.getAccount());
+
         HttpResponseEntity httpResponseEntity = HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.FOUND)
                 .requestTarget(requestTarget)
                 .responsePage(ResponsePage.INDEX_PAGE_URI)
+                .build();
+
+        final String jSessionId = JSessionIdGenerator.generateSessionId();
+        httpResponseEntity.setCookie("JSESSIONID", jSessionId);
+
+        // Session에 쿠키 담기
+        Session session = new Session(jSessionId);
+        sessionManager.add(session);
+
+        return httpResponseEntity;
+    }
+
+
+    private HttpResponseEntity findStaticResource(final String requestTarget) throws IOException {
+
+        // 루트 경로가 아닐경우
+        final URL resource = getClass()
+                .getClassLoader()
+                .getResource("static" + requestTarget);
+
+        if (resource == null) {
+            // 리소스를 찾지 못한 경우에 대한 처리
+            throw new FileNotFoundException("Resource not found: " + requestTarget);
+        }
+
+        final File file = new File(resource.getFile());
+        final String responseBody = new String(Files.readAllBytes(file.toPath()));
+
+        return HttpResponseEntity
+                .builder()
+                .httpStatus(HttpStatus.OK)
+                .requestTarget(requestTarget)
                 .responseBody(responseBody)
                 .build();
-        httpResponseEntity.setCookie("JSESSIONID", JSessionIdGenerator.generateSessionId());
-        return httpResponseEntity;
     }
 
     private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
@@ -202,4 +232,3 @@ public class Http11Processor implements Runnable, Processor {
         return new String(Files.readAllBytes(Paths.get(filePath)));
     }
 }
-
