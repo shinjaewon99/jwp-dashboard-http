@@ -76,12 +76,12 @@ public class Http11Processor implements Runnable, Processor {
 
         // /login 경로 일때
         if (requestTarget.startsWith("/login")) {
-            return createLogin(httpRequestStartLine, httpRequestHeader, httpRequestBody);
+            return createLogin(httpRequestStartLine, httpRequestBody);
         }
 
         // register 경로 일때
         if (requestTarget.startsWith("/register")) {
-            return createRegister(httpRequestStartLine, httpRequestHeader, httpRequestBody);
+            return createRegister(httpRequestStartLine, httpRequestBody);
         }
 
         return findStaticResource(requestTarget);
@@ -99,8 +99,7 @@ public class Http11Processor implements Runnable, Processor {
                 .build();
     }
 
-    private HttpResponseEntity createLogin(final HttpRequestStartLine httpRequestStartLine,
-                                           final HttpRequestHeader httpRequestHeader, final HttpRequestBody httpRequestBody) throws IOException {
+    private HttpResponseEntity createLogin(final HttpRequestStartLine httpRequestStartLine, final HttpRequestBody httpRequestBody) throws IOException {
         final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
         final String requestTarget = httpRequestStartLine.getRequestTarget();
         final String account = httpRequestBody.findBodyValue(ACCOUNT_FIELD);
@@ -182,8 +181,7 @@ public class Http11Processor implements Runnable, Processor {
                 .build();
     }
 
-    private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
-                                              final HttpRequestBody httpRequestBody) {
+    private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestBody httpRequestBody) {
         final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
         final String requestTarget = httpRequestStartLine.getRequestTarget();
 
