@@ -15,8 +15,6 @@ public class HttpResponse {
 
     private static final String CRLF = "\r\n";
     private static final String BLANK_LINE = "";
-    private static final String HTML_CONTENT_TYPE = "text/html";
-    private static final String CSS_CONTENT_TYPE = "text/css";
 
     private final String formatHttpResponse;
 
@@ -57,36 +55,45 @@ public class HttpResponse {
     }
 
     private static String generateHttpStatus(final HttpStatus httpStatus) {
-        return "HTTP/1.1 " + httpStatus.getHttpStatusCode() + " " + httpStatus.name();
+        return String.format("HTTP/1.1 %s %s ", httpStatus.getHttpStatusCode(), httpStatus.name());
     }
 
     private static String generateContentType(final String requestTarget) {
-        return "Content-Type: " + loadContentType(requestTarget) + ";charset=utf-8 ";
+        if (requestTarget.equals(".css")) {
+            return "Content-Type: text/css;charset=utf-8 ";
+        }
+
+        return "Content-Type: text/html;charset=utf-8 ";
     }
 
     private static String generateContentLength(final String responseBody) {
-        return "Content-Length: " + responseBody.getBytes().length + " ";
+        return String.format("Content-Length: %s ", responseBody.getBytes().length);
     }
 
     private static String generateLocation(final HttpResponseEntity httpResponse) {
-        String htmlUri = httpResponse.getResponsePage().getHtmlUri();
+        final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
 
-        return "Location:" + htmlUri + " ";
+        if (htmlUri == null) {
+            return "";
+        }
+
+        return String.format("Location: %s", htmlUri);
     }
 
 
     private static String generateCookie(final HttpResponseEntity httpResponse) {
-        HttpCookie httpCookie = httpResponse.getHttpCookie();
+        final HttpCookie httpCookie = httpResponse.getHttpCookie();
 
-        String jSessionId = httpCookie.getJSessionId();
-
-        return "Set-Cookie: JSESSIONID=" + jSessionId + "; ";
-    }
-
-    private static String loadContentType(final String requestTarget) {
-        if (requestTarget.endsWith(".css")) {
-            return CSS_CONTENT_TYPE;
+        if (httpCookie == null) {
+            return "";
         }
-        return HTML_CONTENT_TYPE;
+
+        final String jSessionId = httpCookie.getJSessionId();
+
+        if (jSessionId == null) {
+            return "";
+        }
+
+        return String.format("Set-Cookie: JSESSIONID=%s", jSessionId);
     }
 }
