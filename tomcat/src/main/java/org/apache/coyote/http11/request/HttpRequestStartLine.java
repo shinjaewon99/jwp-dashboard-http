@@ -5,6 +5,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class HttpRequestStartLine {
@@ -22,17 +25,17 @@ public class HttpRequestStartLine {
     }
 
     public static HttpRequestStartLine from(final String httpRequest) throws IOException {
-        String[] requestStartLine = httpRequest.split(BLANK);
+        List<String> requestStartLine = Arrays.stream(httpRequest.split(BLANK)).collect(Collectors.toList());
         validateHttpRequestStartLineSize(requestStartLine);
 
         return new HttpRequestStartLine(
-                HttpMethod.of(requestStartLine[0]),
-                requestStartLine[1],
-                requestStartLine[2]);
+                HttpMethod.of(requestStartLine.get(0)),
+                requestStartLine.get(1),
+                requestStartLine.get(2));
     }
 
-    private static void validateHttpRequestStartLineSize(String[] requestStartLine) {
-        if (requestStartLine.length != 3) {
+    private static void validateHttpRequestStartLineSize(final List<String> requestStartLine) {
+        if (requestStartLine.size() != 3) {
             throw new IllegalStateException();
         }
     }
