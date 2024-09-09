@@ -14,6 +14,8 @@ public class HttpResponseEntity {
     private final String requestTarget;
     private final String responseBody;
     private final ResponsePage responsePage;
+
+    @Builder.Default
     private final HttpCookie httpCookie = HttpCookie.empty();
 
     public void setCookie(final String key, final String value) {
