@@ -13,7 +13,9 @@ public class HttpResponseEntity {
     private final HttpStatus httpStatus;
     private final String requestTarget;
     private final String responseBody;
-    private final ResponsePage responsePage;
+
+    @Builder.Default
+    private final ResponsePage responsePage  = ResponsePage.empty();
 
     @Builder.Default
     private final HttpCookie httpCookie = HttpCookie.empty();

@@ -14,4 +14,8 @@ public enum ResponsePage {
     ResponsePage(String htmlUri) {
         this.htmlUri = htmlUri;
     }
+
+    public static ResponsePage empty() {
+        return EMPTY;
+    }
 }
