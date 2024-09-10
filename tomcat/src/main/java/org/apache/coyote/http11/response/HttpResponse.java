@@ -50,8 +50,7 @@ public class HttpResponse {
 
     private static String loadResponseBody(final String htmlUri) throws IOException {
         URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
-        File file = new File(resource.getFile());
-        return new String(Files.readAllBytes(file.toPath()));
+        return  new String(Files.readAllBytes(new File(resource.getFile()).toPath()));
     }
 
     private static String generateHttpStatus(final HttpStatus httpStatus) {
