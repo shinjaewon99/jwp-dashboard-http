@@ -8,12 +8,8 @@ import support.StubSocket;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,10 +18,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class LoginTest {
 
     @Test
-    void 로그인_페이지에_접속_테스트() throws IOException, URISyntaxException {
+    void 로그인_페이지에_접속_테스트() throws IOException {
         // given
         final String httpRequest = String.join("\r\n",
-                "GET /index.html HTTP/1.1 ",
+                "GET /login HTTP/1.1 ",
                 "Host: localhost:8080 ",
                 "Connection: keep-alive ",
                 "",
@@ -39,14 +35,13 @@ public class LoginTest {
 
         // then
         final URL resource = getClass().getClassLoader().getResource("static/login.html");
-        final Path path = Paths.get(resource.toURI());
-        final String responseBody = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
+        final String responseBody = new String(Files.readAllBytes(new File(resource.getFile()).toPath()));
 
         var expected = "HTTP/1.1 200 OK \r\n" +
                 "Content-Type: text/html;charset=utf-8 \r\n" +
-                +responseBody.getBytes().length + "\r\n" +
+                "Content-Length: " + responseBody.getBytes().length + " \r\n" +
                 "\r\n" +
-                new String(Files.readAllBytes(new File(resource.getFile()).toPath()));
+                responseBody;
 
         assertThat(socket.output()).isEqualTo(expected);
     }
