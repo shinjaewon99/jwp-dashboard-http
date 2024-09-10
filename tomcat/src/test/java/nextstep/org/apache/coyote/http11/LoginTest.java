@@ -45,4 +45,31 @@ public class LoginTest {
 
         assertThat(socket.output()).isEqualTo(expected);
     }
+
+    @Test
+    void 로그인_성공_테스트() {
+
+        // given
+        final String requestBody = "account=shin&password=pass";
+
+        final String httpRequest = String.join("\r\n",
+                "POST /login HTTP/1.1 ",
+                "Host: localhost:8080 ",
+                "Connection: keep-alive ",
+                "Content-Length: " + requestBody.getBytes().length,
+                "",
+                requestBody);
+
+        final var socket = new StubSocket(httpRequest);
+        final Http11Processor processor = new Http11Processor(socket);
+
+        // when
+        processor.process(socket);
+
+        // then
+        var expected = "HTTP/1.1 302 FOUND \r\n" +
+                "Location: /index.html";
+
+        assertThat(socket.output()).contains(expected);
+    }
 }
