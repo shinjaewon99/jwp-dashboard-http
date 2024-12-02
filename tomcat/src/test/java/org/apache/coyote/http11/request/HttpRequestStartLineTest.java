@@ -21,7 +21,7 @@ class HttpRequestStartLineTest {
 
         // then
         assertThat("GET").isEqualTo(request.getHttpMethod().name());
-        assertThat("/index.html").isEqualTo(request.getRequestTarget());
+        assertThat("/index.html").isEqualTo(request.getPath());
         assertThat("HTTP/1.1\r\n").isEqualTo(request.getHttpVersion());
     }
 

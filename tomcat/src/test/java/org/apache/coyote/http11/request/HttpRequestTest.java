@@ -30,7 +30,7 @@ class HttpRequestTest {
         HttpRequestStartLine startLine = request.getHttpRequestStartLine();
 
         softly.assertThat(startLine.getHttpMethod().name()).isEqualTo("GET");
-        softly.assertThat(startLine.getRequestTarget()).isEqualTo("/index.html");
+        softly.assertThat(startLine.getPath()).isEqualTo("/index.html");
         softly.assertThat(startLine.getHttpVersion()).isEqualTo("HTTP/1.1");
 
         HttpRequestHeader requestHeader = request.getHttpRequestHeader();

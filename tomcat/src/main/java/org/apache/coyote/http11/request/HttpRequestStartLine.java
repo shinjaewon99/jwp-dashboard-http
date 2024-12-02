@@ -15,12 +15,12 @@ public class HttpRequestStartLine {
     private static final Logger log = LoggerFactory.getLogger(HttpRequestStartLine.class);
     private static final String BLANK = " ";
     private final HttpMethod httpMethod;
-    private final String requestTarget;
+    private final String path;
     private final String httpVersion;
 
-    public HttpRequestStartLine(HttpMethod httpMethod, String requestTarget, String httpVersion) {
+    public HttpRequestStartLine(HttpMethod httpMethod, String path, String httpVersion) {
         this.httpMethod = httpMethod;
-        this.requestTarget = requestTarget;
+        this.path = path;
         this.httpVersion = httpVersion;
     }
 

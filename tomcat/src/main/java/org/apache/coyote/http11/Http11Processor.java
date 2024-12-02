@@ -67,7 +67,7 @@ public class Http11Processor implements Runnable, Processor {
     private HttpResponseEntity createHttpResponse(final HttpRequestStartLine httpRequestStartLine, final HttpRequestHeader httpRequestHeader,
                                                   final HttpRequestBody httpRequestBody) throws IOException {
 
-        final String requestTarget = httpRequestStartLine.getRequestTarget();
+        final String requestTarget = httpRequestStartLine.getPath();
 
         // "/" 루트 경로일때
         if (requestTarget.equals("/")) {
@@ -101,7 +101,7 @@ public class Http11Processor implements Runnable, Processor {
 
     private HttpResponseEntity createLogin(final HttpRequestStartLine httpRequestStartLine, final HttpRequestBody httpRequestBody) throws IOException {
         final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
-        final String requestTarget = httpRequestStartLine.getRequestTarget();
+        final String requestTarget = httpRequestStartLine.getPath();
         final String account = httpRequestBody.findBodyValue(ACCOUNT_FIELD);
 
         if (httpMethod == HttpMethod.GET && account == null) {
@@ -183,7 +183,7 @@ public class Http11Processor implements Runnable, Processor {
 
     private HttpResponseEntity createRegister(final HttpRequestStartLine httpRequestStartLine, final HttpRequestBody httpRequestBody) {
         final HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
-        final String requestTarget = httpRequestStartLine.getRequestTarget();
+        final String requestTarget = httpRequestStartLine.getPath();
 
         if (httpMethod == HttpMethod.GET) {
             return HttpResponseEntity
