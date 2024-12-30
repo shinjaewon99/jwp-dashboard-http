@@ -3,8 +3,12 @@ package org.apache.coyote.http11.request;
 import org.apache.coyote.http11.cookie.HttpCookie;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import static java.util.stream.Collectors.collectingAndThen;
+import static java.util.stream.Collectors.toMap;
 
 public class HttpRequestHeader {
 
@@ -18,15 +22,10 @@ public class HttpRequestHeader {
     }
 
     public static HttpRequestHeader from(final String requestTarget) throws IOException {
-        Map<String, String> headerMap = new HashMap<>();
-
-        String[] lines = requestTarget.split("\r\n");
-        for (String line : lines) {
-            String[] split = line.split(": ");
-            headerMap.put(split[0], split[1]);
-        }
-
-        return new HttpRequestHeader(headerMap);
+        return Arrays.stream(requestTarget.split("\r\n"))
+                .map(element -> element.split(": "))
+                .collect(collectingAndThen(
+                        toMap(element -> element[0], element -> element[1]), HttpRequestHeader::new));
     }
 
     public String findHeaderValue(final String headerKey) {
