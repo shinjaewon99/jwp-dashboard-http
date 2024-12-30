@@ -22,7 +22,7 @@ public class HttpRequest {
 
     public static HttpRequest from(final BufferedReader bufferedReader) throws IOException {
         HttpRequestStartLine requestStartLine = parseHttpRequestStartLine(bufferedReader);
-        HttpRequestHeader requestHeader = parseHttpRequestHeader(bufferedReader);
+        HttpRequestHeader requestHeader = parseHttpRequestHeaders(bufferedReader);
         HttpRequestBody requestBody = parseHttpRequestBody(requestHeader.findContentLength(), bufferedReader);
 
         return new HttpRequest(requestStartLine, requestHeader, requestBody);
@@ -38,7 +38,7 @@ public class HttpRequest {
         return HttpRequestStartLine.from(requestTarget);
     }
 
-    private static HttpRequestHeader parseHttpRequestHeader(final BufferedReader bufferedReader) throws IOException {
+    private static HttpRequestHeader parseHttpRequestHeaders(final BufferedReader bufferedReader) throws IOException {
         StringBuilder httpRequestHeaderBuilder = new StringBuilder();
         String requestTarget = bufferedReader.readLine();
 
