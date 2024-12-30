@@ -38,6 +38,6 @@ public class HttpRequestHeader {
     }
 
     public HttpCookie getCookie() {
-        return HttpCookie.from(headers.get("Cookie"));
+        return HttpCookie.from(findHeaderValue("Cookie"));
     }
 }
