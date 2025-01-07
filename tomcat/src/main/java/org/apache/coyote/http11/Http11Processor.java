@@ -5,10 +5,7 @@ import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
 import org.apache.coyote.http11.request.*;
-import org.apache.coyote.http11.response.ContentType;
-import org.apache.coyote.http11.response.HttpResponse;
-import org.apache.coyote.http11.response.HttpResponseEntity;
-import org.apache.coyote.http11.response.HttpStatus;
+import org.apache.coyote.http11.response.*;
 import org.apache.coyote.http11.session.JSessionIdGenerator;
 import org.apache.coyote.http11.session.Session;
 import org.apache.coyote.http11.session.SessionManager;
@@ -97,7 +94,7 @@ public class Http11Processor implements Runnable, Processor {
                 .builder()
                 .httpStatus(HttpStatus.OK)
                 .contentType(generateContentType(requestTarget))
-                .responseBody(responseBody)
+                .responseBody(HttpResponseBody.from(responseBody))
                 .responsePage(EMPTY)
                 .build();
     }
@@ -180,7 +177,7 @@ public class Http11Processor implements Runnable, Processor {
                 .builder()
                 .httpStatus(HttpStatus.OK)
                 .contentType(generateContentType(requestTarget))
-                .responseBody(responseBody)
+                .responseBody(HttpResponseBody.from(responseBody))
                 .build();
     }
 

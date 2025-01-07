@@ -11,7 +11,7 @@ import org.apache.coyote.http11.cookie.HttpCookie;
 public class HttpResponseEntity {
 
     private final HttpStatus httpStatus;
-    private final String responseBody;
+    private final HttpResponseBody responseBody;
     private final ContentType contentType;
 
     @Builder.Default

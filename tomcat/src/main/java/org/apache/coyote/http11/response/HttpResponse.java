@@ -21,13 +21,12 @@ public class HttpResponse {
     public static HttpResponse from(final HttpResponseEntity httpResponse) throws IOException {
 
         final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
-        final String requestTarget = httpResponse.getRequestTarget();
         final HttpStatus httpStatus = httpResponse.getHttpStatus();
-        String responseBody = httpResponse.getResponseBody();
+        HttpResponseBody responseBody = httpResponse.getResponseBody();
 
         // Http 응답중 body가 비어있는경우
         if (responseBody == null) {
-            responseBody = loadResponseBody(htmlUri);
+            responseBody = generateResponseBody(htmlUri);
         }
 
         if (httpStatus == HttpStatus.FOUND) {
@@ -45,12 +44,12 @@ public class HttpResponse {
                 generateContentType(httpResponse.getContentType().getName()),
                 generateContentLength(responseBody),
                 BLANK_LINE,
-                responseBody));
+                responseBody.getBody()));
     }
 
-    private static String loadResponseBody(final String htmlUri) throws IOException {
+    private static HttpResponseBody generateResponseBody(final String htmlUri) throws IOException {
         URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
-        return  new String(Files.readAllBytes(new File(resource.getFile()).toPath()));
+        return HttpResponseBody.from(new String(Files.readAllBytes(new File(resource.getFile()).toPath())));
     }
 
     private static String generateHttpStatus(final HttpStatus httpStatus) {
@@ -65,8 +64,9 @@ public class HttpResponse {
         return "Content-Type: text/html;charset=utf-8 ";
     }
 
-    private static String generateContentLength(final String responseBody) {
-        return String.format("Content-Length: %s ", responseBody.getBytes().length);
+    private static String generateContentLength(final HttpResponseBody responseBody) {
+        final String body = responseBody.getBody();
+        return String.format("Content-Length: %s ", body.getBytes().length);
     }
 
     private static String generateLocation(final HttpResponseEntity httpResponse) {
