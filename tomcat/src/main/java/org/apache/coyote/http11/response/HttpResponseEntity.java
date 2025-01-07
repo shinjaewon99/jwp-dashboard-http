@@ -13,6 +13,7 @@ public class HttpResponseEntity {
     private final HttpStatus httpStatus;
     private final String requestTarget;
     private final String responseBody;
+    private final ContentType contentType;
 
     @Builder.Default
     private final ResponsePage responsePage  = ResponsePage.empty();
