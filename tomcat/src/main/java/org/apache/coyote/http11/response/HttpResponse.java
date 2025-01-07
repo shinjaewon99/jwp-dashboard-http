@@ -42,7 +42,7 @@ public class HttpResponse {
         return new HttpResponse(String.join(
                 CRLF,
                 generateHttpStatus(httpStatus),
-                generateContentType(requestTarget),
+                generateContentType(httpResponse.getContentType().getName()),
                 generateContentLength(responseBody),
                 BLANK_LINE,
                 responseBody));

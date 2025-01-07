@@ -5,10 +5,10 @@ import nextstep.jwp.exception.UncheckedServletException;
 import nextstep.jwp.model.User;
 import org.apache.coyote.Processor;
 import org.apache.coyote.http11.request.*;
+import org.apache.coyote.http11.response.ContentType;
 import org.apache.coyote.http11.response.HttpResponse;
 import org.apache.coyote.http11.response.HttpResponseEntity;
 import org.apache.coyote.http11.response.HttpStatus;
-import org.apache.coyote.http11.response.ResponsePage;
 import org.apache.coyote.http11.session.JSessionIdGenerator;
 import org.apache.coyote.http11.session.Session;
 import org.apache.coyote.http11.session.SessionManager;
@@ -22,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.NoSuchElementException;
 
+import static org.apache.coyote.http11.response.ResponsePage.*;
+
 
 public class Http11Processor implements Runnable, Processor {
 
@@ -29,6 +31,7 @@ public class Http11Processor implements Runnable, Processor {
     private static final String ACCOUNT_FIELD = "account";
     private static final String PASSWORD_FIELD = "password";
     private static final String EMAIL_FIELD = "email";
+    private static final String CSS = ".css";
     private final SessionManager sessionManager = new SessionManager();
     private final Socket connection;
 
@@ -93,9 +96,9 @@ public class Http11Processor implements Runnable, Processor {
         return HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.OK)
-                .requestTarget(requestTarget)
+                .contentType(generateContentType(requestTarget))
                 .responseBody(responseBody)
-                .responsePage(ResponsePage.EMPTY)
+                .responsePage(EMPTY)
                 .build();
     }
 
@@ -108,8 +111,8 @@ public class Http11Processor implements Runnable, Processor {
             return HttpResponseEntity
                     .builder()
                     .httpStatus(HttpStatus.OK)
-                    .requestTarget(requestTarget)
-                    .responsePage(ResponsePage.LOGIN_PAGE_URI)
+                    .contentType(generateContentType(requestTarget))
+                    .responsePage(LOGIN_PAGE_URI)
                     .build();
         }
 
@@ -132,8 +135,8 @@ public class Http11Processor implements Runnable, Processor {
         return HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.UNAUTHORIZED)
-                .requestTarget(requestTarget)
-                .responsePage(ResponsePage.UNAUTHORIZED_PAGE_URI)
+                .contentType(generateContentType(requestTarget))
+                .responsePage(UNAUTHORIZED_PAGE_URI)
                 .build();
     }
 
@@ -143,8 +146,8 @@ public class Http11Processor implements Runnable, Processor {
         HttpResponseEntity httpResponseEntity = HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.FOUND)
-                .requestTarget(requestTarget)
-                .responsePage(ResponsePage.INDEX_PAGE_URI)
+                .contentType(generateContentType(requestTarget))
+                .responsePage(INDEX_PAGE_URI)
                 .build();
 
         final String jSessionId = JSessionIdGenerator.generateSessionId();
@@ -176,7 +179,7 @@ public class Http11Processor implements Runnable, Processor {
         return HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.OK)
-                .requestTarget(requestTarget)
+                .contentType(generateContentType(requestTarget))
                 .responseBody(responseBody)
                 .build();
     }
@@ -189,8 +192,8 @@ public class Http11Processor implements Runnable, Processor {
             return HttpResponseEntity
                     .builder()
                     .httpStatus(HttpStatus.OK)
-                    .requestTarget(requestTarget)
-                    .responsePage(ResponsePage.REGISTER_PAGE_URI)
+                    .contentType(generateContentType(requestTarget))
+                    .responsePage(REGISTER_PAGE_URI)
                     .build();
         }
 
@@ -206,9 +209,16 @@ public class Http11Processor implements Runnable, Processor {
         return HttpResponseEntity
                 .builder()
                 .httpStatus(HttpStatus.FOUND)
-                .requestTarget(requestTarget)
-                .responsePage(ResponsePage.INDEX_PAGE_URI)
+                .contentType(generateContentType(requestTarget))
+                .responsePage(INDEX_PAGE_URI)
                 .build();
+    }
+
+    private ContentType generateContentType(final String requestTarget) {
+        if (requestTarget.endsWith(CSS)) {
+            return ContentType.CSS;
+        }
+        return ContentType.HTML;
     }
 
     private User findAccount(final String account) {
