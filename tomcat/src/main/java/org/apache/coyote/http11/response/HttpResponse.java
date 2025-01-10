@@ -1,13 +1,13 @@
 package org.apache.coyote.http11.response;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.apache.coyote.http11.cookie.HttpCookie;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.util.Optional;
 
 @Getter
 public class HttpResponse {
@@ -45,8 +45,8 @@ public class HttpResponse {
             return new HttpResponse(String.join(
                     CRLF,
                     generateHttpStatus(httpStatus),
-                    generateLocation(httpResponse),
-                    generateCookie(httpResponse)
+                    generateLocation(httpResponse.getLocation()),
+                    generateCookie(httpResponse.getHttpCookie())
             ));
         }
 
@@ -72,7 +72,6 @@ public class HttpResponse {
         if (requestTarget.equals(".css")) {
             return "Content-Type: text/css;charset=utf-8 ";
         }
-
         return "Content-Type: text/html;charset=utf-8 ";
     }
 
@@ -81,30 +80,17 @@ public class HttpResponse {
         return String.format("Content-Length: %s ", body.getBytes().length);
     }
 
-    private static String generateLocation(final HttpResponseEntity httpResponse) {
-        final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
-
-        if (htmlUri == null) {
-            return "";
-        }
-
-        return String.format("Location: %s", htmlUri);
+    private static String generateLocation(final String location) {
+        return Optional.ofNullable(location)
+                .map(destination -> String.format("Location: %s", destination))
+                .orElse("");
     }
 
 
-    private static String generateCookie(final HttpResponseEntity httpResponse) {
-        final HttpCookie httpCookie = httpResponse.getHttpCookie();
-
-        if (httpCookie == null) {
-            return "";
-        }
-
-        final String jSessionId = httpCookie.getJSessionId();
-
-        if (jSessionId == null) {
-            return "";
-        }
-
-        return String.format("Set-Cookie: JSESSIONID=%s", jSessionId);
+    private static String generateCookie(final HttpCookie httpCookie) {
+        return Optional.ofNullable(httpCookie)
+                .map(cookie -> cookie.getJSessionId())
+                .map(id -> String.format("Set-Cookie: JSESSIONID=%s", id))
+                .orElse("");
     }
 }
