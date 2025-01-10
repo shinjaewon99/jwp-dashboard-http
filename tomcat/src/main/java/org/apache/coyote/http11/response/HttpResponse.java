@@ -10,13 +10,25 @@ import java.net.URL;
 import java.nio.file.Files;
 
 @Getter
-@RequiredArgsConstructor
 public class HttpResponse {
 
     private static final String CRLF = "\r\n";
     private static final String BLANK_LINE = "";
 
-    private final String formatHttpResponse;
+    private String response;
+    private HttpResponseStartLine httpResponseStartLine;
+    private HttpResponseHeader httpResponseHeader;
+    private HttpResponseBody httpResponseBody;
+
+    public HttpResponse(final String response) {
+        this.response = response;
+    }
+
+    public HttpResponse(final HttpResponseStartLine httpResponseStartLine, final HttpResponseHeader httpResponseHeader, final HttpResponseBody httpResponseBody) {
+        this.httpResponseStartLine = httpResponseStartLine;
+        this.httpResponseHeader = httpResponseHeader;
+        this.httpResponseBody = httpResponseBody;
+    }
 
     public static HttpResponse from(final HttpResponseEntity httpResponse) throws IOException {
 
