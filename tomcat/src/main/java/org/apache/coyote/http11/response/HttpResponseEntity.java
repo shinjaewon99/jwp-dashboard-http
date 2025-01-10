@@ -12,6 +12,7 @@ public class HttpResponseEntity {
 
     private final HttpStatus httpStatus;
     private final HttpResponseBody responseBody;
+    private final String location;
     private final ContentType contentType;
 
     @Builder.Default
