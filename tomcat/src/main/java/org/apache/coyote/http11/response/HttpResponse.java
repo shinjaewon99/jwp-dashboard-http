@@ -72,9 +72,4 @@ public class HttpResponse {
         URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
         return HttpResponseBody.from(new String(Files.readAllBytes(new File(resource.getFile()).toPath())));
     }
-
-    private static String generateHttpStatus(final HttpStatus httpStatus) {
-        return String.format("HTTP/1.1 %s %s ", httpStatus.getHttpStatusCode(), httpStatus.name());
-    }
-
 }
