@@ -1,30 +1,56 @@
 package org.apache.coyote.http11.response;
 
-import org.apache.coyote.http11.request.HttpRequestHeader;
+import lombok.Getter;
+import org.apache.coyote.http11.cookie.HttpCookie;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
-import static java.util.stream.Collectors.collectingAndThen;
-import static java.util.stream.Collectors.toMap;
-
+@Getter
 public class HttpResponseHeader {
 
-    private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> headers;
 
-    public HttpResponseHeader(Map<String, String> headers) {
-        this.headers = new HashMap<>(headers);
+    public HttpResponseHeader() {
+        this(new LinkedHashMap<>());
     }
 
-    private HttpResponseHeader() {
+    private HttpResponseHeader(final Map<String, String> headers) {
+        this.headers = new LinkedHashMap<>(headers);
     }
 
-    public static HttpResponseHeader from(final String requestTarget) throws IOException {
-        return Arrays.stream(requestTarget.split("\r\n"))
-                .map(element -> element.split(": "))
-                .collect(collectingAndThen(
-                        toMap(element -> element[0], element -> element[1]), HttpResponseHeader::new));
+    public HttpResponseHeader location(final String location) {
+        return Optional.ofNullable(location)
+                .map(destination -> {
+                    headers.put("Location: ", destination);
+                    return this;
+                })
+                .orElse(this);
+    }
+
+    public HttpResponseHeader setCookie(final HttpCookie httpCookie) {
+        return Optional.ofNullable(httpCookie)
+                .map(cookie -> cookie.getJSessionId())
+                .map(id -> {
+                    headers.put("Set-Cookie: JSESSIONID=%s", id);
+                    return this;
+                })
+                .orElse(this);
+    }
+
+    public HttpResponseHeader contentType(final ContentType contentType) {
+        setHeader("Content-Type", contentType.getName() + ";charset=utf-8");
+        return this;
+    }
+
+    public HttpResponseHeader contentTypeLength(final HttpResponseBody responseBody) {
+        final String body = responseBody.getBody();
+        setHeader("Content-Length:", String.valueOf(body.getBytes().length));
+        return this;
+    }
+
+    private void setHeader(final String key, final String value) {
+        headers.put(key, value);
     }
 }

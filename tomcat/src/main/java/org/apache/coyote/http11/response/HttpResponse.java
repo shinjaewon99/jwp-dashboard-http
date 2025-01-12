@@ -1,13 +1,14 @@
 package org.apache.coyote.http11.response;
 
+import lombok.Builder;
 import lombok.Getter;
-import org.apache.coyote.http11.cookie.HttpCookie;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Optional;
+
+import static org.apache.coyote.http11.common.HttpVersion.HTTP1_1;
 
 @Getter
 public class HttpResponse {
@@ -16,7 +17,7 @@ public class HttpResponse {
     private static final String BLANK_LINE = "";
 
     private String response;
-    private HttpResponseStartLine httpResponseStartLine;
+    private HttpResponseStatusStart httpResponseStatusStart;
     private HttpResponseHeader httpResponseHeader;
     private HttpResponseBody httpResponseBody;
 
@@ -24,39 +25,47 @@ public class HttpResponse {
         this.response = response;
     }
 
-    public HttpResponse(final HttpResponseStartLine httpResponseStartLine, final HttpResponseHeader httpResponseHeader, final HttpResponseBody httpResponseBody) {
-        this.httpResponseStartLine = httpResponseStartLine;
+    @Builder
+    public HttpResponse(final HttpResponseStatusStart httpResponseStatusStart, final HttpResponseHeader httpResponseHeader, final HttpResponseBody httpResponseBody) {
+        this.httpResponseStatusStart = httpResponseStatusStart;
         this.httpResponseHeader = httpResponseHeader;
         this.httpResponseBody = httpResponseBody;
     }
 
     public static HttpResponse from(final HttpResponseEntity httpResponse) throws IOException {
 
-        final String htmlUri = httpResponse.getResponsePage().getHtmlUri();
+        final String location = httpResponse.getLocation();
         final HttpStatus httpStatus = httpResponse.getHttpStatus();
         HttpResponseBody responseBody = httpResponse.getResponseBody();
 
         // Http 응답중 body가 비어있는경우
         if (responseBody == null) {
-            responseBody = generateResponseBody(htmlUri);
+            responseBody = generateResponseBody(location);
         }
 
         if (httpStatus == HttpStatus.FOUND) {
-            return new HttpResponse(String.join(
-                    CRLF,
-                    generateHttpStatus(httpStatus),
-                    generateLocation(httpResponse.getLocation()),
-                    generateCookie(httpResponse.getHttpCookie())
-            ));
+            HttpResponseHeader headers = new HttpResponseHeader()
+                    .location(location)
+                    .setCookie(httpResponse.getHttpCookie());
+
+            return HttpResponse
+                    .builder()
+                    .httpResponseStatusStart(HttpResponseStatusStart.of(HTTP1_1, httpStatus))
+                    .httpResponseHeader(headers)
+                    .httpResponseBody(responseBody)
+                    .build();
         }
 
-        return new HttpResponse(String.join(
-                CRLF,
-                generateHttpStatus(httpStatus),
-                generateContentType(httpResponse.getContentType().getName()),
-                generateContentLength(responseBody),
-                BLANK_LINE,
-                responseBody.getBody()));
+        HttpResponseHeader headers = new HttpResponseHeader()
+                .contentType(httpResponse.getContentType())
+                .contentTypeLength(responseBody);
+
+        return HttpResponse
+                .builder()
+                .httpResponseStatusStart(HttpResponseStatusStart.of(HTTP1_1, httpStatus))
+                .httpResponseHeader(headers)
+                .httpResponseBody(responseBody)
+                .build();
     }
 
     private static HttpResponseBody generateResponseBody(final String htmlUri) throws IOException {
@@ -68,29 +77,4 @@ public class HttpResponse {
         return String.format("HTTP/1.1 %s %s ", httpStatus.getHttpStatusCode(), httpStatus.name());
     }
 
-    private static String generateContentType(final String requestTarget) {
-        if (requestTarget.equals(".css")) {
-            return "Content-Type: text/css;charset=utf-8 ";
-        }
-        return "Content-Type: text/html;charset=utf-8 ";
-    }
-
-    private static String generateContentLength(final HttpResponseBody responseBody) {
-        final String body = responseBody.getBody();
-        return String.format("Content-Length: %s ", body.getBytes().length);
-    }
-
-    private static String generateLocation(final String location) {
-        return Optional.ofNullable(location)
-                .map(destination -> String.format("Location: %s", destination))
-                .orElse("");
-    }
-
-
-    private static String generateCookie(final HttpCookie httpCookie) {
-        return Optional.ofNullable(httpCookie)
-                .map(cookie -> cookie.getJSessionId())
-                .map(id -> String.format("Set-Cookie: JSESSIONID=%s", id))
-                .orElse("");
-    }
 }
