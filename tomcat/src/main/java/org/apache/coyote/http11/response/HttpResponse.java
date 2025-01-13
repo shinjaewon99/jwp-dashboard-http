@@ -68,6 +68,25 @@ public class HttpResponse {
                 .build();
     }
 
+    public String getHttpResponse() {
+        return null;
+    }
+
+    private String formatResponseStatusLine(final HttpResponseStatusStart httpResponseStatusStart) {
+        return String.format("%s %s %s",
+                httpResponseStatusStart.getHttpVersion().getVersion(),
+                httpResponseStatusStart.getHttpStatus().getHttpStatusCode(),
+                httpResponseStatusStart.getHttpStatus().name());
+    }
+
+    private String formatResponseHeader(final HttpResponseHeader header) {
+        return null;
+    }
+
+    private String formatResponseBody() {
+        return httpResponseBody.getBody();
+    }
+
     private static HttpResponseBody generateResponseBody(final String htmlUri) throws IOException {
         URL resource = ClassLoader.getSystemClassLoader().getResource("static" + htmlUri);
         return HttpResponseBody.from(new String(Files.readAllBytes(new File(resource.getFile()).toPath())));
