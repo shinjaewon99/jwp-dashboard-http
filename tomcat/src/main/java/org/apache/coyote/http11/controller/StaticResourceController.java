@@ -14,7 +14,7 @@ import java.nio.file.Files;
 
 public class StaticResourceController implements Controller {
     @Override
-    public HttpResponseEntity service(final HttpRequest httpRequest, final HttpResponse httpResponse) throws IOException {
+    public HttpResponseEntity service(final HttpRequest httpRequest) throws IOException {
 
         final String requestTarget = httpRequest.getHttpRequestStartLine().getPath();
         // 루트 경로가 아닐경우

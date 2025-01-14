@@ -11,7 +11,7 @@ public class IndexPageController implements Controller {
 
 
     @Override
-    public HttpResponseEntity service(final HttpRequest httpRequest, final HttpResponse httpResponse) throws IOException {
+    public HttpResponseEntity service(final HttpRequest httpRequest) throws IOException {
         final String requestTarget = httpRequest.getHttpRequestStartLine().getPath();
 
         final var responseBody = "Hello world!";
