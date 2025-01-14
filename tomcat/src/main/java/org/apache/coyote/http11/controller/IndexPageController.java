@@ -8,8 +8,6 @@ import java.io.IOException;
 import static org.apache.coyote.http11.response.ResponsePage.EMPTY;
 
 public class IndexPageController implements Controller {
-
-
     @Override
     public HttpResponseEntity service(final HttpRequest httpRequest) throws IOException {
         final String requestTarget = httpRequest.getHttpRequestStartLine().getPath();
