@@ -20,6 +20,7 @@ import java.net.Socket;
 public class Http11Processor implements Runnable, Processor {
     private static final Logger log = LoggerFactory.getLogger(Http11Processor.class);
     private final Socket connection;
+    private final RequestMapping controllerHandler = RequestMapping.init();
 
     public Http11Processor(final Socket connection) {
         this.connection = connection;
@@ -39,7 +40,7 @@ public class Http11Processor implements Runnable, Processor {
 
             // HTTP 요청의 첫번째 라인
             final HttpRequest httpRequest = HttpRequest.from(bufferedReader);
-            Controller controller = RequestMapping.init().getController(httpRequest);
+            Controller controller = controllerHandler.getController(httpRequest);
             HttpResponseEntity responseEntity = controller.service(httpRequest);
             String response = HttpResponse.from(responseEntity).getResponse();
 
