@@ -13,6 +13,8 @@ public interface Controller {
     default ContentType generateContentType(final String requestTarget) {
         if (requestTarget.endsWith(".css")) {
             return ContentType.CSS;
+        } else if (requestTarget.endsWith(".js")) {
+            return ContentType.JAVASCRIPT;
         }
         return ContentType.HTML;
     }

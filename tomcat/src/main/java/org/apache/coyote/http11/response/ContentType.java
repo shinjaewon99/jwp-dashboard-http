@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ContentType {
     HTML("text/html"),
-    CSS("text/css");
+    CSS("text/css"),
+    JAVASCRIPT("text/javascript");
 
     private final String name;
 }
