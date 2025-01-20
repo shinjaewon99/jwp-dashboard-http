@@ -2,10 +2,8 @@ package org.apache.coyote.http11.controller;
 
 import nextstep.jwp.db.InMemoryUserRepository;
 import nextstep.jwp.model.User;
-import org.apache.coyote.http11.request.HttpMethod;
-import org.apache.coyote.http11.request.HttpRequest;
-import org.apache.coyote.http11.request.HttpRequestBody;
-import org.apache.coyote.http11.request.HttpRequestStartLine;
+import org.apache.coyote.http11.cookie.HttpCookie;
+import org.apache.coyote.http11.request.*;
 import org.apache.coyote.http11.response.HttpResponseEntity;
 import org.apache.coyote.http11.response.HttpStatus;
 import org.apache.coyote.http11.session.JSessionIdGenerator;
@@ -25,13 +23,27 @@ public class LoginController implements Controller {
     @Override
     public HttpResponseEntity service(final HttpRequest httpRequest) throws IOException {
         HttpRequestStartLine httpRequestStartLine = httpRequest.getHttpRequestStartLine();
-
+        HttpRequestHeader httpRequestHeader = httpRequest.getHttpRequestHeader();
         HttpRequestBody httpRequestBody = httpRequest.getHttpRequestBody();
+
         HttpMethod httpMethod = httpRequestStartLine.getHttpMethod();
         String requestTarget = httpRequestStartLine.getPath();
         String account = httpRequestBody.findBodyValue(ACCOUNT_FIELD);
 
         if (httpMethod == HttpMethod.GET && account == null) {
+            HttpCookie cookie = httpRequestHeader.getCookie();
+            Session session = sessionManager.findSession(cookie.getJSessionId());
+
+            // session이 존재한경우 = 로그인 한경우
+            if (session != null) {
+                return HttpResponseEntity
+                        .builder()
+                        .httpStatus(HttpStatus.FOUND)
+                        .contentType(generateContentType(requestTarget))
+                        .responsePage(INDEX_PAGE_URI)
+                        .build();
+            }
+
             return HttpResponseEntity
                     .builder()
                     .httpStatus(HttpStatus.OK)
