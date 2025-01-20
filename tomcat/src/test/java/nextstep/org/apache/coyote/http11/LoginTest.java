@@ -94,14 +94,8 @@ class LoginTest {
         processor.process(socket);
 
         // then
-        final URL resource = getClass().getClassLoader().getResource("static/401.html");
-        final String responseBody = new String(Files.readAllBytes(new File(resource.getFile()).toPath()));
-
-        var expected = "HTTP/1.1 401 UNAUTHORIZED \r\n" +
-                "Content-Type: text/html;charset=utf-8 \r\n" +
-                "Content-Length: " + responseBody.getBytes().length + " \r\n" +
-                "\r\n" +
-                responseBody;
+        var expected = "HTTP/1.1 302 FOUND \r\n" +
+                "Location: /401.html";
 
         assertThat(socket.output()).contains(expected);
     }

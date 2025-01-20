@@ -87,7 +87,7 @@ public class LoginController implements Controller {
     private HttpResponseEntity handleLoginFail(final String requestTarget) {
         return HttpResponseEntity
                 .builder()
-                .httpStatus(HttpStatus.UNAUTHORIZED)
+                .httpStatus(HttpStatus.FOUND)
                 .contentType(generateContentType(requestTarget))
                 .responsePage(UNAUTHORIZED_PAGE_URI)
                 .build();
