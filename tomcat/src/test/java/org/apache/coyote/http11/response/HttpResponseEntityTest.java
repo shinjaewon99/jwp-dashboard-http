@@ -17,8 +17,6 @@ class HttpResponseEntityTest {
         HttpCookie httpCookie = new HttpCookie(cookie);
         entity = HttpResponseEntity.builder()
                 .httpStatus(HttpStatus.OK)
-                .requestTarget("/index.html")
-                .responseBody("account=shin&password=123")
                 .responsePage(ResponsePage.INDEX_PAGE_URI)
                 .httpCookie(httpCookie)
                 .build();
@@ -29,7 +27,6 @@ class HttpResponseEntityTest {
         SoftAssertions softly = new SoftAssertions();
 
         softly.assertThat(entity.getHttpStatus()).isEqualTo(HttpStatus.OK);
-        softly.assertThat(entity.getRequestTarget()).isEqualTo("/index.html");
         softly.assertThat(entity.getResponseBody()).isEqualTo("account=shin&password=123");
         softly.assertThat(entity.getResponsePage()).isEqualTo(ResponsePage.INDEX_PAGE_URI);
     }
