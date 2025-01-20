@@ -2,6 +2,7 @@ package thread.stage0;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
@@ -27,8 +28,8 @@ class SynchronizationTest {
      */
     @Test
     void testSynchronized() throws InterruptedException {
-        var executorService = Executors.newFixedThreadPool(3);
-        var synchronizedMethods = new SynchronizedMethods();
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+        SynchronizedMethods synchronizedMethods = new SynchronizedMethods();
 
         IntStream.range(0, 1000)
                 .forEach(count -> executorService.submit(synchronizedMethods::calculate));
@@ -41,7 +42,7 @@ class SynchronizationTest {
 
         private int sum = 0;
 
-        public void calculate() {
+        public synchronized void calculate() {
             synchronized(this){
                 setSum(getSum() + 1);
             }
