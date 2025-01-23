@@ -33,27 +33,9 @@ public class HttpResponse {
     }
 
     public static HttpResponse from(final HttpResponseEntity httpResponse) throws IOException {
-
-        final String location = httpResponse.getLocation();
+        HttpResponseBody responseBody = generateResponseBody(httpResponse);
+        HttpResponseHeader headers = generateResponseHeaders(httpResponse, responseBody);
         final HttpStatus httpStatus = httpResponse.getHttpStatus();
-        HttpResponseBody responseBody = createResponseBody(httpResponse, location);
-
-        if (httpStatus == HttpStatus.FOUND) {
-            HttpResponseHeader headers = new HttpResponseHeader()
-                    .location(location)
-                    .setCookie(httpResponse.getHttpCookie());
-
-            return HttpResponse
-                    .builder()
-                    .httpResponseStatusStart(HttpResponseStatusStart.of(HTTP1_1, httpStatus))
-                    .httpResponseHeader(headers)
-                    .httpResponseBody(responseBody)
-                    .build();
-        }
-
-        HttpResponseHeader headers = new HttpResponseHeader()
-                .contentType(httpResponse.getContentType())
-                .contentTypeLength(responseBody);
 
         return HttpResponse
                 .builder()
@@ -63,14 +45,30 @@ public class HttpResponse {
                 .build();
     }
 
-    private static HttpResponseBody createResponseBody(final HttpResponseEntity httpResponse, final String location) throws IOException {
+    private static HttpResponseBody generateResponseBody(final HttpResponseEntity httpResponse) throws IOException {
         HttpResponseBody responseBody = httpResponse.getResponseBody();
+        String location = httpResponse.getLocation();
 
         // Http 응답중 body가 비어있는경우
         if (responseBody == null) {
             responseBody = generateResponseBody(location);
         }
         return responseBody;
+    }
+
+    private static HttpResponseHeader generateResponseHeaders(final HttpResponseEntity httpResponse, final HttpResponseBody responseBody) throws IOException {
+        HttpStatus httpStatus = httpResponse.getHttpStatus();
+        final String location = httpResponse.getLocation();
+
+        if (httpStatus == HttpStatus.FOUND) {
+            return new HttpResponseHeader()
+                    .location(location)
+                    .setCookie(httpResponse.getHttpCookie());
+        }
+
+        return new HttpResponseHeader()
+                .contentType(httpResponse.getContentType())
+                .contentTypeLength(responseBody);
     }
 
     public String getHttpResponse() {
