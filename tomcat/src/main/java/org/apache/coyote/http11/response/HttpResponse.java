@@ -36,12 +36,7 @@ public class HttpResponse {
 
         final String location = httpResponse.getLocation();
         final HttpStatus httpStatus = httpResponse.getHttpStatus();
-        HttpResponseBody responseBody = httpResponse.getResponseBody();
-
-        // Http 응답중 body가 비어있는경우
-        if (responseBody == null) {
-            responseBody = generateResponseBody(location);
-        }
+        HttpResponseBody responseBody = createResponseBody(httpResponse, location);
 
         if (httpStatus == HttpStatus.FOUND) {
             HttpResponseHeader headers = new HttpResponseHeader()
@@ -66,6 +61,16 @@ public class HttpResponse {
                 .httpResponseHeader(headers)
                 .httpResponseBody(responseBody)
                 .build();
+    }
+
+    private static HttpResponseBody createResponseBody(final HttpResponseEntity httpResponse, final String location) throws IOException {
+        HttpResponseBody responseBody = httpResponse.getResponseBody();
+
+        // Http 응답중 body가 비어있는경우
+        if (responseBody == null) {
+            responseBody = generateResponseBody(location);
+        }
+        return responseBody;
     }
 
     public String getHttpResponse() {
